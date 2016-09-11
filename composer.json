@@ -1,0 +1,20 @@
+{
+    "name": "syssine/ka_scrapper",
+    "description": "The console scrapper application for syssine",
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/console": "3.1.4",
+        "illuminate/database": "^5.3",
+        "sunra/php-simple-html-dom-parser": "^1.5",
+        "guzzlehttp/guzzle": "^6.2",
+        "nesbot/carbon": "^1.21"
+    },
+    "autoload": {
+        "psr-0": {
+            "Kacademy\\": "src/Kacademy/"
+        },
+        "psr-4": {
+            "Kacademy\\": "src/Kacademy/"
+        }
+    }
+}
