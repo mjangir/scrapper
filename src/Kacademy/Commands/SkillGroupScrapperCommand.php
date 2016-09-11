@@ -9,10 +9,10 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Kacademy\Scrappers\SkillScrapper;
-use Kacademy\Models\Skill as SkillModel;
+use Kacademy\Scrappers\SkillGroupScrapper;
+use Kacademy\Models\SkillGroup as SkillGroupModel;
 
-class SkillScrapperCommand extends Command {
+class SkillGroupScrapperCommand extends Command {
 
     /**
      * Configures the console command
@@ -21,41 +21,41 @@ class SkillScrapperCommand extends Command {
      */
     protected function configure()
     {   
-        $this->setName("scrap:skills")
-             ->setDescription("This command scraps all the skills of a topic")
+        $this->setName("scrap:skill-groups")
+             ->setDescription("This command scraps all the topics of a skill")
              ->setDefinition(array(
                       new InputOption('only-new', 'a'),
                       new InputOption('only-update', 'u'),
                       new InputOption('add-update', 'e'),
                       new InputOption('refresh', 'r'),
-                      new InputOption('topic-id', 't', InputOption::VALUE_OPTIONAL, 'Topic Id Primary Key', false)
+                      new InputOption('topic-id', 's', InputOption::VALUE_OPTIONAL, 'Topic Id Primary Key', false)
                 ))
              ->setHelp(<<<EOT
-Scraps all skills (Filters applicable)
+Scraps all skill groups (Filters applicable)
 
 Usage:
 
 The following command will only add new records that don't exist in database.
-<info>scrap:skills --only-new</info>
-<info>scrap:skills -o</info>
+<info>scrap:skill-groups --only-new</info>
+<info>scrap:skill-groups -o</info>
 
 The following command will update the existing records only. It will not add new.
-<info>scrap:skills --only-update</info>
-<info>scrap:skills -u</info>
+<info>scrap:skill-groups --only-update</info>
+<info>scrap:skill-groups -u</info>
 
 The following command will update existing records if found otherwise will add a new one
-<info>scrap:skills --add-update</info>
-<info>scrap:skills -a</info>
+<info>scrap:skill-groups --add-update</info>
+<info>scrap:skill-groups -a</info>
 
 The following command will delete all existing records and add from the begining
-<info>scrap:skills --refresh</info>
-<info>scrap:skills -r</info>
+<info>scrap:skill-groups --refresh</info>
+<info>scrap:skill-groups -r</info>
 
 FILTERING:
 
-Grab the skills for a specific topic ID. Provide the database topic ID primary key with the above commands combination.
-<info>scrap:skills --topic-id 5</info>
-<info>scrap:skills -t 5</info>
+Grab the skill groups for a specific Topic ID. Provide the database Topic ID primary key with the above commands combination.
+<info>scrap:topics --topic-id 5</info>
+<info>scrap:topics -t 5</info>
 
 EOT
 );
@@ -72,7 +72,7 @@ EOT
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $helper = $this->getHelper('question');
-        $purgeQuestion = new ConfirmationQuestion('This will delete all previous skills. Are you sure, you want to continue this action.?', false);
+        $purgeQuestion = new ConfirmationQuestion('This will delete all previous skill-groups. Are you sure, you want to continue this action.?', false);
 
         // Get all inputs
         $onlyNew    = $input->getOption('only-new');
@@ -94,18 +94,18 @@ EOT
         }
         else
         {
-            SkillModel::getQuery()->delete();
+            SkillGroupModel::getQuery()->delete();
         }
 
-        $scrapper = new SkillScrapper();
+        $scrapper = new SkillGroupScrapper();
         $scrapper->setUrl('math/early-math/cc-early-math-counting-topic');
-        $scrapper->runScrapper(function($skills) use ($scrapper, $output) {
+        $scrapper->runScrapper(function($skillGroups) use ($scrapper, $output) {
 
-            if(!empty($skill))
+            if(!empty($skillGroups))
             {
-                print_r($skill);
+                print_r($skillGroups);
             }
-            $output->writeln('<info>Total Skills Scrapped:: '.count($skills).'</info>'.PHP_EOL);
+            $output->writeln('<info>Total Skill Groups Scrapped:: '.count($skillGroups).'</info>'.PHP_EOL);
         });
     }
 }
