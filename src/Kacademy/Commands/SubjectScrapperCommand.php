@@ -90,33 +90,44 @@ EOT
             SubjectModel::getQuery()->delete();
         }
 
-        SubjectModel::create(array(
-            'title'     => 'Math',
-            'slug'      => 'math',
-            'ka_url'    => 'http://math',
-        ));
-
+        // Create scrapper instance
         $scrapper = new SubjectScrapper();
         $scrapper->setUrl('');
         $scrapper->runScrapper(function($subjects) use ($scrapper, $output) {
 
+            $totalSubjects      = count($subjects);
+            $totalChildSubjects = 0;
+
             if(!empty($subjects))
             {
-                foreach ($subjects as $subject) {
-                    $urlParts   = explode('/', $subject['url']);
-                    $slug       = end($urlParts);
-                    $subjectName= $subject['subject_name'];
-                    $kaUrl      = $scrapper->getBaseUrl().$subject['url'];
+              foreach ($subjects as $key => $mainSubject) {
 
-                    $output->writeln('Scrapping:: '.$subjectName.PHP_EOL);
-                    // $subjectModel::create(array(
-                    //     'title'     => $subject['subject_name'],
-                    //     'slug'      => $slug,
-                    //     'ka_url'    => $scrapper->getBaseUrl().$subject['link'],
-                    // ));
+                $subjectModel = new SubjectModel();
+
+                $saveMain = $subjectModel->create(
+                    array(
+                      'title'     => $mainSubject['title'],
+                      'slug'      => $mainSubject['slug'],
+                      'ka_url'    => $mainSubject['ka_url']
+                    )
+                );
+
+                $withChildren = '';
+
+                if(isset($mainSubject['children']) && !empty($mainSubject['children']))
+                {
+                  $childrenCount        = count($mainSubject['children']);
+                  $totalChildSubjects   += $childrenCount;
+                  $saveMain->children()->createMany($mainSubject['children']);
+                  $withChildren         = ' With'.$childrenCount.' Children';
                 }
+
+                // Debug
+                $output->writeln('--'.$mainSubject['title'].' Scrapped'. $withChildren.PHP_EOL);
+              }
             }
-            $output->writeln('<info>Total Subjects Scrapped:: '.count($subjects).'</info>'.PHP_EOL);
+
+            $output->writeln('<info>Total '.$totalSubjects.' Main And '.$totalChildSubjects.' Child Subjects Scrapped</info>'.PHP_EOL);
         });
     }
 }

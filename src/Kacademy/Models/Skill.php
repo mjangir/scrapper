@@ -19,5 +19,5 @@ class Skill extends Eloquent {
      *
      * @var bool
      */
-	public $timestamps = false;
+	public $timestamps = true;
 }

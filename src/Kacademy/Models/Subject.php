@@ -14,10 +14,38 @@ class Subject extends Eloquent {
      */
     protected $guarded = ['id'];
 
+    protected $fillable = ['title','slug','ka_url'];
+
     /**
      * Indicates if the model should be timestamped.
      *
      * @var bool
      */
-	public $timestamps = false;
+	public $timestamps = true;
+
+    /**
+     * Class constructor
+     *
+     * @return void
+     */
+   
+    /**
+     * Children
+     *
+     * @return collection
+     */
+    public function children()
+    {        
+        return $this->hasMany(Subject::class,'parent_id');
+    }
+
+    /**
+     * Parents
+     *
+     * @return collection
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Subject::class,'parent_id');
+    }
 }

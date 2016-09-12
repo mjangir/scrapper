@@ -11,6 +11,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Kacademy\Scrappers\TopicScrapper;
 use Kacademy\Models\Topic as TopicModel;
+use Kacademy\Models\Subject as SubjectModel;
 
 class TopicScrapperCommand extends Command {
 
@@ -80,10 +81,12 @@ EOT
         $addUpdate  = $input->getOption('add-update');
         $refresh    = $input->getOption('refresh');
 
+        // Output format styles
         $errorStyle = new OutputFormatterStyle('red');
         $successStyle = new OutputFormatterStyle('green');
         $gettingStyle = new OutputFormatterStyle('yellow');
 
+        // Apply output styles
         $output->getFormatter()->setStyle('error', $errorStyle);
         $output->getFormatter()->setStyle('info', $successStyle);
         $output->getFormatter()->setStyle('getting', $gettingStyle);
@@ -94,18 +97,39 @@ EOT
         }
         else
         {
+            // If refresh option provided, delete all topics
             TopicModel::getQuery()->delete();
         }
 
-        $scrapper = new TopicScrapper();
-        $scrapper->setUrl('math/early-math');
-        $scrapper->runScrapper(function($topics) use ($scrapper, $output) {
+        // Get all subjects
+        $subjects = SubjectModel::where('is_active', 1)
+                                ->where('ka_url', '<>', NULL)
+                                ->where('parent_id', '<>', NULL)
+                                ->where('ka_url', '<>', '')
+                                ->get();
+        if(!empty($subjects))
+        {
+            foreach ($subjects as $subject) {
 
-            if(!empty($topics))
-            {
-                print_r($topics);
+                $subjectUrl    = $subject->ka_url;
+                $subjectId     = $subject->id;
+
+                $scrapper = new TopicScrapper();
+                $scrapper->setUrl($subjectUrl);
+                $scrapper->runScrapper(function($topics) use ($scrapper, $output, $subjectId) {
+
+                    if(!empty($topics))
+                    {
+                        foreach ($topics as $key => $topic) {
+
+                            $topic['subject_id'] = $subjectId;
+
+                            TopicModel::create($topic);
+                        }
+                    }
+                    $output->writeln('<info>Total Topics Scrapped:: '.count($topics).'</info>'.PHP_EOL);
+                });
             }
-            $output->writeln('<info>Total Topics Scrapped:: '.count($topics).'</info>'.PHP_EOL);
-        });
+        }                            
     }
 }

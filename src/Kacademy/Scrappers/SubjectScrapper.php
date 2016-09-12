@@ -53,10 +53,94 @@ class SubjectScrapper extends BaseScrapper {
 		return $this->_url;
 	}
 
+	/**
+     * Extract json string from raw HTML
+     * 
+     * @return string
+     */
+	private function extractJson()
+	{
+		$html = $this->getHtml();
+
+		$jsonToArray = array();
+
+		if(!empty($html))
+		{
+			$delimiter = '#';
+			$startTag = 'ReactDOM.render(Component({"domains"';
+			$endTag = '})';
+			$regex = $delimiter . preg_quote($startTag, $delimiter) 
+			                    . '(.*?)' 
+			                    . preg_quote($endTag, $delimiter) 
+			                    . $delimiter 
+			                    . 's';
+			preg_match($regex, $html, $matches);
+
+			if(!empty($matches[0]))
+			{
+				$invalidJson 	= $matches[0];
+				$validJson 		= str_replace('ReactDOM.render(Component({"domains"', '{"domains"', $invalidJson);
+				$validJson = str_replace('})', '}', $validJson);
+
+				$jsonToArray = json_decode($validJson, true);
+			}
+		}
+		return $jsonToArray;
+	}
+
+	/**
+     * Scrap data from valid JSON
+     * 
+     * @return string
+     */
+	private function scrapByJson()
+	{
+		$result = $this->extractJson();
+
+		$subjects = array();
+
+		if(!empty($result) && isset($result['domains']))
+		{
+			foreach ($result['domains'] as $subject) {
+
+				$title 	= $subject['translatedTitle'];
+				$kaUrl 	= $subject['href'];
+				$slug 	= $subject['identifier'];
+
+				$subjects[$title] 	= array(
+					'title' => $title,
+					'ka_url'=> $kaUrl,
+					'slug'	=> $slug
+				);
+
+				if(isset($subject['children']))
+				{
+					foreach ($subject['children'] as $child) {
+						
+						$titleC 	= $child['translatedTitle'];
+						$kaUrlC 	= $child['href'];
+						$slugC 		= $child['identifier'];
+
+						$subjects[$title]['children'][] = array(
+							'title' => $titleC,
+							'ka_url'=> $kaUrlC,
+							'slug'	=> $slugC
+						);
+					}
+				}
+			}
+		}
+
+		return $subjects;
+	}
+
+	/**
+     * Scrap data using simple html dom
+     * 
+     * @return array
+     */
 	private function scrap()
 	{
-		$this->setHtmlDom();
-
 		$htmlDom = $this->getHtmlDom();
 
 		$subjects = array();
@@ -65,18 +149,22 @@ class SubjectScrapper extends BaseScrapper {
 		{
 			if($htmlDom->find('ul[class^=domains_]',0) !== NULL)
 			{
+				$i = 0;
 				foreach ($htmlDom->find('ul[class^=domains_]',0)->find('li') as $li)
 				{
-					$header = $li->find('header', 0);
+					$header = $li->find('header', $i);
 
 					if($header !== NULL)
 					{
-						$anchor					= $header->find('a',0);
-						$subjectLink			= $anchor->href;
-						$subjectName 			= $anchor->plaintext;
-						$subjects[$subjectName] = array(
-							'subject_name' => $subjectName,
-							'url' => $subjectLink,
+						$anchor				= $header->find('a',0);
+						$kaUrl				= $anchor->href;
+						$title 				= $anchor->plaintext;
+						$urlParts   		= explode('/', $kaUrl);
+                    	$slug       		= end($urlParts);
+						$subjects[$title] 	= array(
+							'title' => $title,
+							'ka_url'=> $kaUrl,
+							'slug'	=> $slug
 						);
 					}
 
@@ -86,15 +174,20 @@ class SubjectScrapper extends BaseScrapper {
 							$childAnchor			= $childSubjectList->find('a',0);
 							if($childAnchor !== NULL)
 							{
-								$childSubjectLink		= $childAnchor->href;
-								$childSubjectName 		= $childAnchor->plaintext;
-								$subjects[$subjectName]['children'][] = array(
-									'subject_name' => $childSubjectName,
-									'url' => $childSubjectLink
+								$childKaUrl			= $childAnchor->href;
+								$childTitle 		= $childAnchor->plaintext;
+								$childUrlParts   	= explode('/', $childKaUrl);
+                    			$childSlug       	= end($childUrlParts);
+								$subjects[$title]['children'][] = array(
+									'title'  => $childTitle,
+									'ka_url' => $childKaUrl,
+									'slug'	 => $childSlug
 								);
 							}
 						}
 					}
+
+					$i++;
 				}
 			}
 		}
@@ -108,7 +201,8 @@ class SubjectScrapper extends BaseScrapper {
      */
 	public function runScrapper($callback)
 	{
-		$subjects = $this->scrap();
+		$this->setHtmlDom();
+		$subjects = $this->scrapByJson();
 		$callback($subjects);
 	}
 }

@@ -60,9 +60,14 @@ class BaseScrapper {
      */
 	public function getHtml()
 	{
-		$client   = new \GuzzleHttp\Client(array( 'curl' => array( CURLOPT_SSL_VERIFYPEER => false)));
-		$response = $client->request('GET', $this->getUrl());
-		return $response->getBody();
+		try {
+			$client   = new \GuzzleHttp\Client(array( 'curl' => array( CURLOPT_SSL_VERIFYPEER => false)));
+			$response = $client->request('GET', $this->getUrl());
+			return $response->getBody();
+		} catch (Exception $e) {
+			return NULL;
+		}
+		
 	}
 
 	/**
