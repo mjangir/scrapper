@@ -54,14 +54,106 @@ class SkillScrapper extends BaseScrapper {
 	}
 
 	/**
-     * scrap Actual scrapper function
+     * Extract json string from raw HTML
      * 
-     * @return void
+     * @return string
+     */
+	private function extractJson()
+	{
+		$html = $this->getHtml();
+
+		$jsonToArray = array();
+
+		if(!empty($html))
+		{
+			$delimiter = '#';
+			$startTag = 'ReactDOM.render(Component({"curation"';
+			$endTag = '})';
+			$regex = $delimiter . preg_quote($startTag, $delimiter) 
+			                    . '(.*?)' 
+			                    . preg_quote($endTag, $delimiter) 
+			                    . $delimiter 
+			                    . 's';
+			preg_match($regex, $html, $matches);
+
+			if(!empty($matches[0]))
+			{
+				$invalidJson 	= $matches[0];
+				$validJson 		= str_replace('ReactDOM.render(Component({"curation"', '{"curation"', $invalidJson);
+				$validJson = str_replace('})', '}', $validJson);
+
+				$jsonToArray = json_decode($validJson, true);
+			}
+		}
+		return $jsonToArray;
+	}
+
+	/**
+     * Scrap data from valid JSON
+     * 
+     * @return string
+     */
+	private function scrapByJson()
+	{
+		$result = $this->extractJson();
+
+		$topics = array();
+
+		if(!empty($result) && isset($result['curation']['tabs']))
+		{
+			$modules = array();
+			
+			foreach ($result['curation']['tabs'] as $key => $value) {
+
+				if($key == 'modules')
+				{
+					$modules = $value;
+					break;
+				}
+			}
+
+			if(!empty($modules))
+			{
+				foreach ($modules as $key => $module) {
+
+					if(is_array($module))
+					{
+						foreach ($module as $moduleData) {
+
+							if(isset($moduleData['kind']) 
+								&& $moduleData['kind'] == 'TableOfContentsRow')
+							{
+								$title 			= $moduleData['title'];
+								$kaUrl 			= $moduleData['url'];
+								$description 	= $moduleData['description'];
+								$icon 			= $moduleData['icon'];
+								$urlParts   	= explode('/', $kaUrl);
+		                    	$slug       	= end($urlParts);
+
+		                    	$topics[] = array(
+		                    		'title'			=> $title,
+		                    		'icon'			=> $icon,
+		                    		'description'	=> $description,
+		                    		'slug'			=> $slug,
+		                    		'ka_url'		=> $kaUrl
+		                    	);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return $topics;
+	}
+
+	/**
+     * Scrap data using simple html dom
+     * 
+     * @return array
      */
 	private function scrap()
 	{
-		$this->setHtmlDom();
-
 		$htmlDom = $this->getHtmlDom();
 
 		$topics = array();
@@ -110,7 +202,8 @@ class SkillScrapper extends BaseScrapper {
      */
 	public function runScrapper($callback)
 	{
-		$topics = $this->scrap();
+		$this->setHtmlDom();
+		$topics = $this->scrapByJson();
 		$callback($topics);
 	}
 }
