@@ -93,7 +93,18 @@ class BaseScrapper {
      * @return mixed
      */
     protected function mayNull($value) {
-        return (!isset($value) && !empty($value)) ? $value : NULL;
+        return (isset($value) && !empty($value)) ? $value : NULL;
+    }
+    
+    /**
+     * Check key is set in array or not
+     * 
+     * @param mixed $array
+     * @param mixed $key
+     * @return mixed
+     */
+    protected function arrayKeySetAndNull($array, $key) {
+        return (array_key_exists($key, $array) && isset($array[$key]) && !empty($array[$key])) ? $array[$key] : NULL;
     }
     
     /**

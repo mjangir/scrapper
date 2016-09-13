@@ -91,36 +91,40 @@ class SkillScrapper extends BaseScrapper {
 
         if (!empty($result) && isset($result['tutorialNavData']['contentModels'])) {
             foreach ($result['tutorialNavData']['contentModels'] as $key => $cModel) {
-
-                $skills[] = array(
-                    'ka_id'                 => $this->mayNull($cModel['id']),
-                    'type'                  => $this->mayNull($cModel['contentKind']),
-                    'name'                  => $this->mayNull($cModel['name']),
-                    'title'                 => $this->cleanHtml($this->mayNull($cModel['title'])),
-                    'display_name'          => $this->mayNull($cModel['displayName']),
-                    'short_display_name'    => $this->mayNull($cModel['shortDisplayName']),
-                    'pretty_display_name'   => $this->mayNull($cModel['prettyDisplayName']),
-                    'description'           => $this->cleanHtml($this->mayNull($cModel['descriptionHtml'])),
-                    'creation_date'         => date('Y-m-d H:i:s', strtotime($this->mayNull($cModel['creationDate']))),
-                    'date_added'            => date('Y-m-d H:i:s', strtotime($this->mayNull($cModel['dateAdded']))),
-                    'ka_url'                => $this->mayNull($cModel['kaUrl']),
-                    'image_url'             => $this->mayNull($cModel['imageUrl']),
-                    'keywords'              => $this->mayNull($cModel['keywords']),
-                    'license_name'          => $this->cleanHtml($this->mayNull($cModel['licenseName'])),
-                    'license_full_name'     => $this->cleanHtml($this->mayNull($cModel['licenseFullName'])),
-                    'license_url'           => $this->mayNull($cModel['licenseUrl']),
-                    'license_logo_url'      => $this->mayNull($cModel['licenseLogoUrl']),
-                    'slug'                  => $this->mayNull($cModel['slug']),
-                    'node_slug'             => $this->mayNull($cModel['nodeSlug']),
-                    'ka_relative_url'       => $this->mayNull($cModel['relativeUrl']),
-                    'file_name'             => $this->mayNull($cModel['fileName']),
-                    'thumbnail_default'     => $this->mayNull($cModel['thumbnailUrls']['default']),
-                    'thumbnail_filtered'    => $this->mayNull($cModel['thumbnailUrls']['filtered']),
-                    'video_youtube_id'      => $this->mayNull($cModel['youtubeId']),
-                    'video_duration'        => $this->mayNull($cModel['duration']),
-                    'video_download_size'   => $this->mayNull($cModel['downloadSize']),
-                    'video_download_urls'   => $this->mayNull(json_encode($cModel['downloadUrls']))
+                if(empty($cModel['contentKind']) || empty($cModel['kaUrl']) || empty($cModel['displayName'])
+                        || empty($cModel['slug']) || empty($cModel['nodeSlug']) || empty($cModel['relativeUrl'])){
+                    continue;
+                }
+                $skill = array(
+                    'ka_id'                 => $this->arrayKeySetAndNull($cModel, 'id'),
+                    'type'                  => $this->arrayKeySetAndNull($cModel, 'contentKind'),
+                    'name'                  => $this->arrayKeySetAndNull($cModel, 'name'),
+                    'title'                 => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'title')),
+                    'display_name'          => $this->arrayKeySetAndNull($cModel, 'displayName'),
+                    'short_display_name'    => $this->arrayKeySetAndNull($cModel, 'shortDisplayName'),
+                    'pretty_display_name'   => $this->arrayKeySetAndNull($cModel, 'prettyDisplayName'),
+                    'description'           => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'descriptionHtml')),
+                    'creation_date'         => date('Y-m-d H:i:s', strtotime($this->arrayKeySetAndNull($cModel, 'creationDate'))),
+                    'date_added'            => date('Y-m-d H:i:s', strtotime($this->arrayKeySetAndNull($cModel, 'dateAdded'))),
+                    'ka_url'                => $this->arrayKeySetAndNull($cModel, 'kaUrl'),
+                    'image_url'             => $this->arrayKeySetAndNull($cModel, 'imageUrl'),
+                    'keywords'              => $this->arrayKeySetAndNull($cModel, 'keywords'),
+                    'license_name'          => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'licenseName')),
+                    'license_full_name'     => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'licenseFullName')),
+                    'license_url'           => $this->arrayKeySetAndNull($cModel, 'licenseUrl'),
+                    'license_logo_url'      => $this->arrayKeySetAndNull($cModel, 'licenseLogoUrl'),
+                    'slug'                  => $this->arrayKeySetAndNull($cModel, 'slug'),
+                    'node_slug'             => $this->arrayKeySetAndNull($cModel, 'nodeSlug'),
+                    'ka_relative_url'       => $this->arrayKeySetAndNull($cModel, 'relativeUrl'),
+                    'file_name'             => $this->arrayKeySetAndNull($cModel, 'fileName'),
+                    'thumbnail_default'     => (isset($cModel['thumbnailUrls']) && isset($cModel['thumbnailUrls']['default'])) ? $cModel['thumbnailUrls']['default'] : NULL,
+                    'thumbnail_filtered'    => NULL,
+                    'video_youtube_id'      => $this->arrayKeySetAndNull($cModel, 'youtubeId'),
+                    'video_duration'        => $this->arrayKeySetAndNull($cModel, 'duration'),
+                    'video_download_size'   => $this->arrayKeySetAndNull($cModel, 'downloadSize'),
+                    'video_download_urls'   => json_encode($this->arrayKeySetAndNull($cModel, 'downloadUrls'))
                 );
+                $skills[] = $skill;
             }
         }
 
