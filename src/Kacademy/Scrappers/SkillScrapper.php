@@ -67,7 +67,7 @@ class SkillScrapper extends BaseScrapper {
 		if(!empty($html))
 		{
 			$delimiter = '#';
-			$startTag = 'ReactDOM.render(Component({"curation"';
+			$startTag = 'ReactDOM.render(Component({"breadcrumbs"';
 			$endTag = '})';
 			$regex = $delimiter . preg_quote($startTag, $delimiter) 
 			                    . '(.*?)' 
@@ -79,7 +79,7 @@ class SkillScrapper extends BaseScrapper {
 			if(!empty($matches[0]))
 			{
 				$invalidJson 	= $matches[0];
-				$validJson 		= str_replace('ReactDOM.render(Component({"curation"', '{"curation"', $invalidJson);
+				$validJson 		= str_replace('ReactDOM.render(Component({"breadcrumbs"', '{"breadcrumbs"', $invalidJson);
 				$validJson = str_replace('})', '}', $validJson);
 
 				$jsonToArray = json_decode($validJson, true);
@@ -97,54 +97,45 @@ class SkillScrapper extends BaseScrapper {
 	{
 		$result = $this->extractJson();
 
-		$topics = array();
-
-		if(!empty($result) && isset($result['curation']['tabs']))
+		$skills = array();
+		
+		if(!empty($result) && isset($result['tutorialNavData']['contentModels']))
 		{
-			$modules = array();
-			
-			foreach ($result['curation']['tabs'] as $key => $value) {
+			foreach ($result['tutorialNavData']['contentModels'] as $key => $cModel) {
 
-				if($key == 'modules')
-				{
-					$modules = $value;
-					break;
-				}
-			}
-
-			if(!empty($modules))
-			{
-				foreach ($modules as $key => $module) {
-
-					if(is_array($module))
-					{
-						foreach ($module as $moduleData) {
-
-							if(isset($moduleData['kind']) 
-								&& $moduleData['kind'] == 'TableOfContentsRow')
-							{
-								$title 			= $moduleData['title'];
-								$kaUrl 			= $moduleData['url'];
-								$description 	= $moduleData['description'];
-								$icon 			= $moduleData['icon'];
-								$urlParts   	= explode('/', $kaUrl);
-		                    	$slug       	= end($urlParts);
-
-		                    	$topics[] = array(
-		                    		'title'			=> $title,
-		                    		'icon'			=> $icon,
-		                    		'description'	=> $description,
-		                    		'slug'			=> $slug,
-		                    		'ka_url'		=> $kaUrl
-		                    	);
-							}
-						}
-					}
-				}
+				$skills[] = array(
+					'ka_id' 			=> (isset($cModel['id'])) ? $cModel['id'] : NULL,
+					'type' 				=> (isset($cModel['contentKind'])) ? $cModel['contentKind'] : NULL,
+					'name' 				=> (isset($cModel['name'])) ? $cModel['name'] : NULL,
+					'title' 			=> (isset($cModel['title'])) ? $cModel['title'] : NULL,
+					'display_name' 		=> (isset($cModel['displayName'])) ? $cModel['displayName'] : NULL,
+					'short_display_name' => (isset($cModel['shortDisplayName'])) ? $cModel['shortDisplayName'] : NULL,
+					'pretty_display_name' => (isset($cModel['prettyDisplayName'])) ? $cModel['prettyDisplayName'] : NULL,
+					'description' 		=> (isset($cModel['descriptionHtml'])) ? $cModel['descriptionHtml'] : NULL,
+					'creation_date' 	=> (isset($cModel['creationDate'])) ? $cModel['creationDate'] : NULL,
+					'date_added' 		=> (isset($cModel['dateAdded'])) ? $cModel['dateAdded'] : NULL,
+					'ka_url' 			=> (isset($cModel['kaUrl'])) ? $cModel['kaUrl'] : NULL,
+					'image_url' 		=> (isset($cModel['imageUrl'])) ? $cModel['imageUrl'] : NULL,
+					'keywords' 			=> (isset($cModel['keywords'])) ? $cModel['keywords'] : NULL,
+					'license_name' 		=> (isset($cModel['licenseName'])) ? $cModel['licenseName'] : NULL,
+					'license_full_name' => (isset($cModel['licenseFullName'])) ? $cModel['licenseFullName'] : NULL,
+					'license_url' 		=> (isset($cModel['licenseUrl'])) ? $cModel['licenseUrl'] : NULL,
+					'license_logo_url' 	=> (isset($cModel['licenseLogoUrl'])) ? $cModel['licenseLogoUrl'] : NULL,
+					'slug' 				=> (isset($cModel['slug'])) ? $cModel['slug'] : NULL,
+					'node_slug' 		=> (isset($cModel['nodeSlug'])) ? $cModel['nodeSlug'] : NULL,
+					'ka_relative_url' 	=> (isset($cModel['relativeUrl'])) ? $cModel['relativeUrl'] : NULL,
+					'file_name' 		=> (isset($cModel['fileName'])) ? $cModel['fileName'] : NULL,
+					'thumbnail_default' => (isset($cModel['thumbnailUrls']['default'])) ? $cModel['thumbnailUrls']['default'] : NULL,
+					'thumbnail_filtered' => (isset($cModel['thumbnailUrls']['filtered'])) ? $cModel['thumbnailUrls']['filtered'] : NULL,
+					'video_youtube_id' 	=> (isset($cModel['youtubeId'])) ? $cModel['youtubeId'] : NULL,
+					'video_duration' 	=> (isset($cModel['duration'])) ? $cModel['duration'] : NULL,
+					'video_download_size' => (isset($cModel['downloadSize'])) ? $cModel['downloadSize'] : NULL,
+					'video_download_urls' => (isset($cModel['downloadUrls'])) ? json_encode($cModel['downloadUrls']) : NULL,
+				);
 			}
 		}
 
-		return $topics;
+		return $skills;
 	}
 
 	/**
@@ -203,7 +194,7 @@ class SkillScrapper extends BaseScrapper {
 	public function runScrapper($callback)
 	{
 		$this->setHtmlDom();
-		$topics = $this->scrapByJson();
-		$callback($topics);
+		$skills = $this->scrapByJson();
+		$callback($skills);
 	}
 }

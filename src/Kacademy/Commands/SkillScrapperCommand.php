@@ -11,6 +11,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Kacademy\Scrappers\SkillScrapper;
 use Kacademy\Models\Skill as SkillModel;
+use Kacademy\Models\Topic as TopicModel;
 
 class SkillScrapperCommand extends Command {
 
@@ -97,15 +98,39 @@ EOT
             SkillModel::getQuery()->delete();
         }
 
-        $scrapper = new SkillScrapper();
-        $scrapper->setUrl('math/early-math/cc-early-math-counting-topic');
-        $scrapper->runScrapper(function($skills) use ($scrapper, $output) {
+        // Get all topics
+        $topics = TopicModel::where('is_active', 1)
+                                ->where('ka_url', '<>', NULL)
+                                ->where('ka_url', '<>', '')
+                                ->where('parent_id', '<>', NULL)
+                                ->get();
 
-            if(!empty($skill))
+        $scrapper = new SkillScrapper();
+
+        if(!empty($topics))
+        {
+            foreach ($topics as $topic)
             {
-                print_r($skill);
+                $topicUrl    = $topic->ka_url;
+                $topicId     = $topic->id;
+
+                $scrapper->setUrl($topicUrl);
+                $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topicId)
+                {
+                    if(!empty($skills))
+                    {
+                        foreach ($skills as $skill) {
+
+                            $skill['topic_id']  = $topicId;
+
+                            SkillModel::create($skill);
+                        }
+                    }
+                    $output->writeln('<info>Total Skills Scrapped:: '.count($skills).'</info>'.PHP_EOL);
+                });
+
+                break;
             }
-            $output->writeln('<info>Total Skills Scrapped:: '.count($skills).'</info>'.PHP_EOL);
-        });
+        }
     }
 }
