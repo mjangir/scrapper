@@ -131,9 +131,9 @@ class TopicScrapper extends BaseScrapper {
 		                    	$slug       	= end($urlParts);
 
 		                    	$topics[] = array(
-		                    		'title'			=> $title,
+		                    		'title'			=> htmlentities($title),
 		                    		'icon'			=> $icon,
-		                    		'description'	=> $description,
+		                    		'description'	=> htmlentities($description),
 		                    		'slug'			=> $slug,
 		                    		'ka_url'		=> $kaUrl
 		                    	);

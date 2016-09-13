@@ -108,7 +108,7 @@ class SubjectScrapper extends BaseScrapper {
 				$slug 	= $subject['identifier'];
 
 				$subjects[$title] 	= array(
-					'title' => $title,
+					'title' => htmlentities($title),
 					'ka_url'=> $kaUrl,
 					'slug'	=> $slug
 				);

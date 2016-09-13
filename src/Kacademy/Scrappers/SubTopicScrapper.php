@@ -124,8 +124,8 @@ class SubTopicScrapper extends BaseScrapper {
 							if(isset($moduleData['kind']) 
 								&& $moduleData['kind'] == 'ContentList')
 							{
-								$title 			= $moduleData['title'];
-								$description 	= $moduleData['description'];
+								$title 			= htmlentities($moduleData['title']);
+								$description 	= htmlentities($moduleData['description']);
 		                    	$slug       	= $moduleData['slug'];
 		                    	$kaUrl 			= '';
 
