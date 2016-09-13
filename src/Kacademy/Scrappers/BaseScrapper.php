@@ -102,7 +102,7 @@ class BaseScrapper {
      * @return string
      */
     protected function cleanHtml($string) {
-        return addcslashes(htmlentities($string));
+        return addslashes(htmlentities($string));
     }
 
 }
