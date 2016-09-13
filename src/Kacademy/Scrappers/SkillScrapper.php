@@ -98,7 +98,7 @@ class SkillScrapper extends BaseScrapper {
 		$result = $this->extractJson();
 
 		$skills = array();
-		
+
 		if(!empty($result) && isset($result['tutorialNavData']['contentModels']))
 		{
 			foreach ($result['tutorialNavData']['contentModels'] as $key => $cModel) {
@@ -107,16 +107,16 @@ class SkillScrapper extends BaseScrapper {
 					'ka_id' 			=> (isset($cModel['id'])) ? $cModel['id'] : NULL,
 					'type' 				=> (isset($cModel['contentKind'])) ? $cModel['contentKind'] : NULL,
 					'name' 				=> (isset($cModel['name'])) ? $cModel['name'] : NULL,
-					'title' 			=> (isset($cModel['title'])) ? $cModel['title'] : NULL,
-					'display_name' 		=> (isset($cModel['displayName'])) ? $cModel['displayName'] : NULL,
-					'short_display_name' => (isset($cModel['shortDisplayName'])) ? $cModel['shortDisplayName'] : NULL,
-					'pretty_display_name' => (isset($cModel['prettyDisplayName'])) ? $cModel['prettyDisplayName'] : NULL,
-					'description' 		=> (isset($cModel['descriptionHtml'])) ? $cModel['descriptionHtml'] : NULL,
+					'title' 			=> (isset($cModel['title'])) ? htmlentities($cModel['title']) : NULL,
+					'display_name' 		=> (isset($cModel['displayName'])) ? htmlentities($cModel['displayName']) : NULL,
+					'short_display_name' => (isset($cModel['shortDisplayName'])) ? htmlentities($cModel['shortDisplayName']) : NULL,
+					'pretty_display_name' => (isset($cModel['prettyDisplayName'])) ? htmlentities($cModel['prettyDisplayName']) : NULL,
+					'description' 		=> (isset($cModel['descriptionHtml'])) ? htmlentities($cModel['descriptionHtml']) : NULL,
 					'creation_date' 	=> (isset($cModel['creationDate'])) ? $cModel['creationDate'] : NULL,
 					'date_added' 		=> (isset($cModel['dateAdded'])) ? $cModel['dateAdded'] : NULL,
 					'ka_url' 			=> (isset($cModel['kaUrl'])) ? $cModel['kaUrl'] : NULL,
 					'image_url' 		=> (isset($cModel['imageUrl'])) ? $cModel['imageUrl'] : NULL,
-					'keywords' 			=> (isset($cModel['keywords'])) ? $cModel['keywords'] : NULL,
+					'keywords' 			=> (isset($cModel['keywords'])) ? htmlentities($cModel['keywords']) : NULL,
 					'license_name' 		=> (isset($cModel['licenseName'])) ? $cModel['licenseName'] : NULL,
 					'license_full_name' => (isset($cModel['licenseFullName'])) ? $cModel['licenseFullName'] : NULL,
 					'license_url' 		=> (isset($cModel['licenseUrl'])) ? $cModel['licenseUrl'] : NULL,

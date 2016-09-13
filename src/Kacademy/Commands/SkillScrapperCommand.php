@@ -128,8 +128,6 @@ EOT
                     }
                     $output->writeln('<info>Total Skills Scrapped:: '.count($skills).'</info>'.PHP_EOL);
                 });
-
-                break;
             }
         }
     }
