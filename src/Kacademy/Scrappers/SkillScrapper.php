@@ -91,10 +91,6 @@ class SkillScrapper extends BaseScrapper {
 
         if (!empty($result) && isset($result['tutorialNavData']['contentModels'])) {
             foreach ($result['tutorialNavData']['contentModels'] as $key => $cModel) {
-                if(empty($cModel['contentKind']) || empty($cModel['kaUrl']) || empty($cModel['displayName'])
-                        || empty($cModel['slug']) || empty($cModel['nodeSlug']) || empty($cModel['relativeUrl'])){
-                    continue;
-                }
                 $skill = array(
                     'ka_id'                 => $this->arrayKeySetAndNull($cModel, 'id'),
                     'type'                  => $this->arrayKeySetAndNull($cModel, 'contentKind'),
