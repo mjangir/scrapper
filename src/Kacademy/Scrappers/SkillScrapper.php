@@ -102,7 +102,7 @@ class SkillScrapper extends BaseScrapper {
                     'description'           => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'descriptionHtml')),
                     'creation_date'         => date('Y-m-d H:i:s', strtotime($this->arrayKeySetAndNull($cModel, 'creationDate'))),
                     'date_added'            => date('Y-m-d H:i:s', strtotime($this->arrayKeySetAndNull($cModel, 'dateAdded'))),
-                    'ka_url'                => $this->arrayKeySetAndNull($cModel, 'kaUrl'),
+                    'ka_url'                => ($this->arrayKeySetAndNull($cModel, 'kaUrl') == NULL) ? '' : $this->arrayKeySetAndNull($cModel, 'kaUrl'),
                     'image_url'             => $this->arrayKeySetAndNull($cModel, 'imageUrl'),
                     'keywords'              => $this->arrayKeySetAndNull($cModel, 'keywords'),
                     'license_name'          => $this->cleanHtml($this->arrayKeySetAndNull($cModel, 'licenseName')),
