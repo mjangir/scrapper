@@ -5,10 +5,12 @@ namespace Kacademy\Commands;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
+use Kacademy\Scrappers\TranscriptScrapper;
+use Kacademy\Models\Skill as SkillModel;
+use Kacademy\Models\SkillTranscript as SkillTranscriptModel;
 
 class TranscriptScrapperCommand extends Command {
 
@@ -17,46 +19,23 @@ class TranscriptScrapperCommand extends Command {
      *
      * @return void
      */
-    protected function configure()
-    {   
-        $this->setName("scrap:transcripts")
-             ->setDescription("This command scraps all the transcripts of a skill")
-             ->setDefinition(array(
-                      new InputOption('only-new', 'a'),
-                      new InputOption('only-update', 'u'),
-                      new InputOption('add-update', 'e'),
-                      new InputOption('refresh', 'r'),
-                      new InputOption('skill-id', 's', InputOption::VALUE_OPTIONAL, 'Skill Id Primary Key', false)
+    protected function configure() {
+        $this->setName("scrap:skill-transcripts")
+                ->setDescription("This command scraps all the transcripts of a skill video")
+                ->setDefinition(array(
+                    new InputOption('refresh', 'r')
                 ))
-             ->setHelp(<<<EOT
-Scraps all transcripts (Filters applicable)
+                ->setHelp(<<<EOT
+Scraps all skill-transcripts (Filters applicable)
 
 Usage:
 
-The following command will only add new records that don't exist in database.
-<info>scrap:transcripts --only-new</info>
-<info>scrap:transcripts -o</info>
-
-The following command will update the existing records only. It will not add new.
-<info>scrap:transcripts --only-update</info>
-<info>scrap:transcripts -u</info>
-
-The following command will update existing records if found otherwise will add a new one
-<info>scrap:transcripts --add-update</info>
-<info>scrap:transcripts -a</info>
-
 The following command will delete all existing records and add from the begining
-<info>scrap:transcripts --refresh</info>
-<info>scrap:transcripts -r</info>
-
-FILTERS:
-
-Grab the transcripts for a specific skill ID
-<info>scrap:transcripts --skill-id 5</info>
-<info>scrap:transcripts -s 5</info>
+<info>scrap:skill-transcripts --refresh</info>
+<info>scrap:skill-transcripts -r</info>
 
 EOT
-);
+        );
     }
 
     /**
@@ -67,26 +46,86 @@ EOT
      * 
      * @return void
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
+    protected function execute(InputInterface $input, OutputInterface $output) {
         $helper = $this->getHelper('question');
-        $purgeQuestion = new ConfirmationQuestion('This will delete all previous transcripts based on filters. Are you sure, you want to continue this action.?', false);
+        $purgeQuestion = new ConfirmationQuestion('This will delete all previous transcripts. Are you sure, you want to continue this action.?', false);
 
         // Get all inputs
         $refresh = $input->getOption('refresh');
 
-        if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
-            return;
-        }
-
+        // Output format styles
         $errorStyle = new OutputFormatterStyle('red');
         $successStyle = new OutputFormatterStyle('green');
         $gettingStyle = new OutputFormatterStyle('yellow');
 
+        // Apply output styles
         $output->getFormatter()->setStyle('error', $errorStyle);
         $output->getFormatter()->setStyle('info', $successStyle);
         $output->getFormatter()->setStyle('getting', $gettingStyle);
 
-        $output->writeln(PHP_EOL.'<info>Total Transcripts Scrapped </info>');
+        // If user passed refresh, show a confirmation message
+        if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
+            return;
+        } else if ($refresh) {
+            // If refresh option provided, delete all topics
+            SkillTranscriptModel::getQuery()->delete();
+        }
+
+        // Get all skills for which the transcripts have to be scrapped
+        $skills = SkillModel::where('is_active', 1)
+                ->where('type', '=', 'Video')
+                ->where('video_youtube_id', '<>', NULL)
+                ->where('transcrispt_scrapped', '=', 0)
+                ->get();
+
+        // If skills are found, then start scrapping
+        if (!empty($skills)) {
+            
+            // Iterate over subjects
+            $i = 1;
+            foreach ($skills as $skill) {
+                
+                $urlToScrap = "videos/{$skill->video_youtube_id}/transcript?casing=camel&locale=en&lang=en";
+                
+                // Create Transcript Scrapper Object
+                $scrapper = new TranscriptScrapper();
+                $scrapper->setUrl($urlToScrap);
+                $scrapper->runScrapper(function($transcripts) use ($scrapper, $output, $skill, $i) {
+
+                    $skillId            = $skill->id;
+                    $totalTranscripts   = count($transcripts);
+                    
+                    // Log the skill name on console for which transcripts are being scrapped
+                    $output->writeln("<info>".$i.". Skill:: ".$skill->title."</info>" . PHP_EOL);
+
+                    // If transcripts found for the particular subject
+                    if (!empty($transcripts)) {
+                        
+                        // Iterate over each transcript
+                        foreach ($transcripts as $key => $transcript) {
+                            
+                            $srNo = $key + 1;
+                            // Pass skill ID as foreign key for each transcript
+                            $transcript['skill_id']         = $skillId;
+                            $transcript['youtube_video_id'] = $skill->video_youtube_id;
+                            SkillTranscriptModel::create($transcript);
+                            
+                            // Log the scrapped transcript on console
+                            $output->writeln("---".$srNo.". ".$transcript['text']. PHP_EOL);
+                        }
+                        
+                        // Save number of transcripts scrapped for the skill
+                        $skill->transcrispt_scrapped = $totalTranscripts;
+                        $skill->save();
+                    }
+                    
+                    // Show the completion message on console
+                    $output->writeln("<info>Transcripts Scrapping Completed</info>");
+                });
+                
+                $i++;
+            }
+        }
     }
+
 }

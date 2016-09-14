@@ -5,7 +5,6 @@ namespace Kacademy\Commands;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
@@ -19,33 +18,17 @@ class SubTopicScrapperCommand extends Command {
      *
      * @return void
      */
-    protected function configure()
-    {   
+    protected function configure() {
         $this->setName("scrap:sub-topics")
-             ->setDescription("This command scraps all the sub topics of a topic")
-             ->setDefinition(array(
-                      new InputOption('only-new', 'a'),
-                      new InputOption('only-update', 'u'),
-                      new InputOption('add-update', 'e'),
-                      new InputOption('refresh', 'r'),
-                      new InputOption('topic-id', 't', InputOption::VALUE_OPTIONAL, 'Topic Id Primary Key', false)
+                ->setDescription("This command scraps all the sub topics of a topic")
+                ->setDefinition(array(
+                    new InputOption('refresh', 'r'),
+                    new InputOption('topic-id', 't', InputOption::VALUE_OPTIONAL, 'Topic Id Primary Key', false)
                 ))
-             ->setHelp(<<<EOT
+                ->setHelp(<<<EOT
 Scraps all sub topics (Filters applicable)
 
 Usage:
-
-The following command will only add new records that don't exist in database.
-<info>scrap:skill-groups --only-new</info>
-<info>scrap:skill-groups -o</info>
-
-The following command will update the existing records only. It will not add new.
-<info>scrap:skill-groups --only-update</info>
-<info>scrap:skill-groups -u</info>
-
-The following command will update existing records if found otherwise will add a new one
-<info>scrap:skill-groups --add-update</info>
-<info>scrap:skill-groups -a</info>
 
 The following command will delete all existing records and add from the begining
 <info>scrap:skill-groups --refresh</info>
@@ -58,7 +41,7 @@ Grab the sub topics for a specific Topic ID. Provide the database Topic ID prima
 <info>scrap:topics -t 5</info>
 
 EOT
-);
+        );
     }
 
     /**
@@ -69,16 +52,12 @@ EOT
      * 
      * @return void
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
+    protected function execute(InputInterface $input, OutputInterface $output) {
         $helper = $this->getHelper('question');
         $purgeQuestion = new ConfirmationQuestion('This will delete all previous sub topics. Are you sure, you want to continue this action.?', false);
 
         // Get all inputs
-        $onlyNew    = $input->getOption('only-new');
-        $onlyUpdate = $input->getOption('only-update');
-        $addUpdate  = $input->getOption('add-update');
-        $refresh    = $input->getOption('refresh');
+        $refresh = $input->getOption('refresh');
 
         $errorStyle = new OutputFormatterStyle('red');
         $successStyle = new OutputFormatterStyle('green');
@@ -91,54 +70,67 @@ EOT
         // If user passed refresh, show a confirmation message
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
-        }
-        else if($refresh)
-        {
+        } else if ($refresh) {
             TopicModel::where('parent_id', '<>', NULL)->delete();
         }
 
-        // Get all topics
+        // Get all topics for which the sub-topics have to be scrapped
         $topics = TopicModel::where('is_active', 1)
-                                ->where('ka_url', '<>', NULL)
-                                ->where('ka_url', '<>', '')
-                                ->where('parent_id', '=', NULL)
-                                ->where('skills_scrapped', '=', 0)
-                                ->get();
+                ->where('ka_url', '<>', NULL)
+                ->where('ka_url', '<>', '')
+                ->where('parent_id', '=', NULL)
+                ->where('skills_scrapped', '=', 0)
+                ->get();
 
-        $scrapper = new SubTopicScrapper();
-
-        if(!empty($topics))
-        {
+        
+        // If topics found for which no sub-topics exists in database
+        if (!empty($topics)) {
+            
+            // Iterate over those topics
+            $i = 1;
             foreach ($topics as $topic) {
 
-                $topicUrl    = $topic->ka_url;
-                
-                $scrapper->setUrl($topicUrl);
-                $scrapper->runScrapper(function($subTopics) use ($scrapper, $output, $topic)
-                {
-                    $totalCount = count($subTopics);
-                    
-                    if(!empty($subTopics))
-                    {
-                        $topicId     = $topic->id;
-                        $subjectId   = $topic->subject_id;
-                
-                        foreach ($subTopics as $subTopic) {
+                $topicUrl = $topic->ka_url;
 
+                // Create Sub Topic Scrapper Object
+                $scrapper = new SubTopicScrapper();
+                $scrapper->setUrl($topicUrl);
+                $scrapper->runScrapper(function($subTopics) use ($scrapper, $output, $topic, $i) {
+                    
+                    // Log the topic name on console for which the sub-topics are being scrapped
+                    $output->writeln($i.". ".$topic->title. PHP_EOL);
+                    
+                    $totalSubTopics = count($subTopics);
+
+                    // If sub topics found in scrapping
+                    if (!empty($subTopics)) {
+                        
+                        $topicId    = $topic->id;
+                        $subjectId  = $topic->subject_id;
+
+                        // Iterate over each sub-topic and insert them into DB
+                        foreach ($subTopics as $key => $subTopic) {
+
+                            $subTopicSrNo           = $key + 1;
                             $subTopic['parent_id']  = $topicId;
                             $subTopic['subject_id'] = $subjectId;
-
                             TopicModel::create($subTopic);
+                            
+                            // Log the sub-topic on console
+                            $output->writeln("---".$subTopicSrNo.". ".$subTopic['title']. PHP_EOL);
                         }
+                        
+                        // Set total sub topics scrapped for this main topic
+                        $topic->sub_topics_scrapped = $totalSubTopics;
+                        $topic->save();
                     }
-                    
-                    // Set total sub topics scrapped for this main topic
-                    $topic->sub_topics_scrapped = $totalCount;
-                    $topic->save();
-                    
-                    $output->writeln('<info>Total Sub Topics Scrapped:: '.$totalCount.'</info>'.PHP_EOL);
+                    // Show the completion message on console
+                    $output->writeln("<info>Sub-Topics Scrapping Completed</info>");
                 });
+                
+                $i++;
             }
         }
     }
+
 }

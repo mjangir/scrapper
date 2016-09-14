@@ -18,39 +18,23 @@ class SubjectScrapperCommand extends Command {
      *
      * @return void
      */
-    protected function configure()
-    {   
+    protected function configure() {
         $this->setName("scrap:subjects")
-             ->setDescription("This command scraps all the subject names")
-             ->setDefinition(array(
-                      new InputOption('only-new', 'a'),
-                      new InputOption('only-update', 'u'),
-                      new InputOption('add-update', 'e'),
-                      new InputOption('refresh', 'r')
+                ->setDescription("This command scraps all the subject names")
+                ->setDefinition(array(
+                    new InputOption('refresh', 'r')
                 ))
-             ->setHelp(<<<EOT
+                ->setHelp(<<<EOT
 Scraps all subjects name
 
 Usage:
-
-The following command will only add new records that don't exist in database.
-<info>scrap:subjects --only-new</info>
-<info>scrap:subjects -o</info>
-
-The following command will update the existing records only. It will not add new.
-<info>scrap:subjects --only-update</info>
-<info>scrap:subjects -u</info>
-
-The following command will update existing records if found otherwise will add a new one
-<info>scrap:subjects --add-update</info>
-<info>scrap:subjects -a</info>
 
 The following command will delete all existing records and add from the begining
 <info>scrap:subjects --refresh</info>
 <info>scrap:subjects -r</info>
 
 EOT
-);
+        );
     }
 
     /**
@@ -61,16 +45,12 @@ EOT
      * 
      * @return void
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
+    protected function execute(InputInterface $input, OutputInterface $output) {
         $helper = $this->getHelper('question');
         $purgeQuestion = new ConfirmationQuestion('This will delete all previous subjects. Are you sure, you want to continue this action.?', false);
 
         // Get all inputs
-        $onlyNew    = $input->getOption('only-new');
-        $onlyUpdate = $input->getOption('only-update');
-        $addUpdate  = $input->getOption('add-update');
-        $refresh    = $input->getOption('refresh');
+        $refresh = $input->getOption('refresh');
 
         $errorStyle = new OutputFormatterStyle('red');
         $successStyle = new OutputFormatterStyle('green');
@@ -83,9 +63,7 @@ EOT
         // If user passed refresh, show a confirmation message
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
-        }
-        else if($refresh)
-        {
+        } else if ($refresh) {
             SubjectModel::getQuery()->delete();
         }
 
@@ -97,44 +75,47 @@ EOT
             $totalSubjects      = count($subjects);
             $totalChildSubjects = 0;
 
-            if(!empty($subjects))
-            {
-              $i = 1;
-              foreach ($subjects as $key => $mainSubject) {
+            // If subjects are not empty
+            if (!empty($subjects)) {
+                $i = 1;
+                foreach ($subjects as $key => $mainSubject) {
 
-                $subjectModel = new SubjectModel();
+                    // Create Subject Model Instance and create main subject
+                    $subjectModel = new SubjectModel();
+                    $saveMain = $subjectModel->create(
+                        array(
+                            'title'     => $mainSubject['title'],
+                            'slug'      => $mainSubject['slug'],
+                            'ka_url'    => $mainSubject['ka_url']
+                        )
+                    );
+                    
+                    // Log the main subject on console
+                    $output->writeln($i. ". ".$mainSubject['title']. PHP_EOL);
 
-                $saveMain = $subjectModel->create(
-                    array(
-                      'title'     => $mainSubject['title'],
-                      'slug'      => $mainSubject['slug'],
-                      'ka_url'    => $mainSubject['ka_url']
-                    )
-                );
+                    // If the main subject has some child subjects
+                    if (isset($mainSubject['children']) && !empty($mainSubject['children'])) {
+                        
+                        $childrenCount       = count($mainSubject['children']);
+                        
+                        // Save each child subject in the database
+                        foreach ($mainSubject['children'] as $key => $childSubject) {
+                            $saveMain->children()->create($childSubject);
+                            $childNumber = $key + 1;
+                            $output->writeln("---".$childNumber. " ".$childSubject['title']. PHP_EOL);
+                        }
+                        
+                        //Save child subjects scrapped field
+                        $saveMain->child_subjects_scrapped = $childrenCount;
+                        $saveMain->save();
+                    }
 
-                $withChildren = '';
-
-                if(isset($mainSubject['children']) && !empty($mainSubject['children']))
-                {
-                  $childrenCount        = count($mainSubject['children']);
-                  $totalChildSubjects   += $childrenCount;
-                  $saveMain->children()->createMany($mainSubject['children']);
-                  
-                  //Save child subjects scrapped field
-                  $saveMain->child_subjects_scrapped = $childrenCount;
-                  $saveMain->save();
-                  
-                  $withChildren         = ' With'.$childrenCount.' Children';
+                    $i++;
                 }
-
-                // Debug
-                $output->writeln($i." ".$mainSubject['title']." With {$withChildren} Child Subjects".PHP_EOL);
-                
-                $i++;
-              }
             }
-
-            $output->writeln('<info>Total '.$totalSubjects.' Main And '.$totalChildSubjects.' Child Subjects Scrapped</info>'.PHP_EOL);
+            // Show the completion message on console
+            $output->writeln("<info>Subjects Scrapping Completed</info>");
         });
     }
+
 }

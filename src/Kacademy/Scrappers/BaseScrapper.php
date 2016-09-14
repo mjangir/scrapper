@@ -18,7 +18,7 @@ class BaseScrapper {
      * Site Base Internal API URL for the scrappers
      * @var BASE_API_URL
      */
-    const BASE_API_URL = self::BASE_URL + 'api/internal';
+    const BASE_API_URL = 'https://www.khanacademy.org/api/internal/';
 
     /**
      * HTML DOM string to be parsed by simple_html_dom

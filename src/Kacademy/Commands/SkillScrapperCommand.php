@@ -94,7 +94,7 @@ EOT
 
                 $scrapper = new SkillScrapper();
                 $scrapper->setUrl($topicUrl);
-                $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topic) {
+                $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topic, $i) {
                     
                     // Log the topic name on console for which the skills are being scrapped
                     $output->writeln($i.". ".$topic->title. PHP_EOL);

@@ -4,9 +4,9 @@ namespace Kacademy\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
-class Skill extends Eloquent {
+class SkillTranscript extends Eloquent {
 
-	/**
+    /**
      * The attributes that aren't mass assignable.
      *
      * @var array
@@ -18,5 +18,13 @@ class Skill extends Eloquent {
      *
      * @var bool
      */
-	public $timestamps = true;
+    public $timestamps = true;
+    
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'skill_transcripts';
+
 }
