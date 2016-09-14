@@ -88,20 +88,20 @@ class BaseScrapper {
             $response   = $client->request('GET', $this->getUrl());
             return $response->getBody();
         }
-        catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
+        catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
             $req = $e->getRequest();
             $resp =$e->getResponse();
             return NULL;
             //displayTest($req,$resp);
         }
-        catch (Guzzle\Http\Exception\ServerErrorResponseException $e) {
+        catch (\Guzzle\Http\Exception\ServerErrorResponseException $e) {
 
             $req = $e->getRequest();
             $resp =$e->getResponse();
             return NULL;
             //displayTest($req,$resp);
         }
-        catch (Guzzle\Http\Exception\BadResponseException $e) {
+        catch (\Guzzle\Http\Exception\BadResponseException $e) {
 
             $req = $e->getRequest();
             $resp =$e->getResponse();
