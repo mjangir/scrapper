@@ -81,7 +81,7 @@ class BaseScrapper {
      * @return void
      */
     protected function setHtmlDom() {
-        $html = $this->getHtml();
+        $html = (string)$this->getHtml();
         $htmlDom = HtmlDomParser::str_get_html($html);
         $this->htmlDom = $htmlDom;
     }
