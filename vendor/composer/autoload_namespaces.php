@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Sunra\\PhpSimple\\HtmlDomParser' => array($vendorDir . '/sunra/php-simple-html-dom-parser/Src'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log'),
     'Kacademy\\' => array($baseDir . '/src/Kacademy'),
     'Doctrine\\Common\\Inflector\\' => array($vendorDir . '/doctrine/inflector/lib'),
 );

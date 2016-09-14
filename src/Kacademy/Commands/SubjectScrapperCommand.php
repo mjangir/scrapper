@@ -84,7 +84,7 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         }
-        else
+        else if($refresh)
         {
             SubjectModel::getQuery()->delete();
         }
@@ -99,6 +99,7 @@ EOT
 
             if(!empty($subjects))
             {
+              $i = 1;
               foreach ($subjects as $key => $mainSubject) {
 
                 $subjectModel = new SubjectModel();
@@ -127,7 +128,9 @@ EOT
                 }
 
                 // Debug
-                $output->writeln('--'.$mainSubject['title'].' Scrapped'. $withChildren.PHP_EOL);
+                $output->writeln($i." ".$mainSubject['title']." With {$withChildren} Child Subjects".PHP_EOL);
+                
+                $i++;
               }
             }
 

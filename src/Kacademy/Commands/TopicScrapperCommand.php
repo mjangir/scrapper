@@ -94,7 +94,7 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         }
-        else
+        else if($refresh)
         {
             // If refresh option provided, delete all topics
             TopicModel::getQuery()->delete();

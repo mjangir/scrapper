@@ -92,7 +92,7 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         }
-        else
+        else if($refresh)
         {
             SkillModel::getQuery()->delete();
         }
@@ -113,6 +113,8 @@ EOT
             {
                 $topicUrl    = $topic->ka_url;
                 
+                $output->writeln('<info>Sub Topic :: '.$topic->title.'</info>'.PHP_EOL);
+                
                 $scrapper->setUrl($topicUrl);
                 $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topic)
                 {
@@ -127,6 +129,8 @@ EOT
                             $skill['topic_id']  = $topicId;
 
                             SkillModel::create($skill);
+                            
+                            $output->writeln('<info>----'.$skill['title'].'</info>'.PHP_EOL);
                         }
                     }
                     
@@ -134,7 +138,7 @@ EOT
                     $topic->skills_scrapped = $totalCount;
                     $topic->save();
                     
-                    $output->writeln('<info>Total Skills Scrapped:: '.$totalCount.'</info>'.PHP_EOL);
+                    $output->writeln('<info>---------Total Skills:: '.$totalCount.'----------</info>'.PHP_EOL);
                 });
             }
         }

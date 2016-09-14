@@ -92,7 +92,7 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         }
-        else
+        else if($refresh)
         {
             TopicModel::where('parent_id', '<>', NULL)->delete();
         }

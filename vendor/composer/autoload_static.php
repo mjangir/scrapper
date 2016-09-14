@@ -26,6 +26,10 @@ class ComposerStaticInit2ac380eee7a7a479ad545bf843fca9ad
         array (
             'Psr\\Http\\Message\\' => 17,
         ),
+        'M' => 
+        array (
+            'Monolog\\' => 8,
+        ),
         'K' => 
         array (
             'Kacademy\\' => 9,
@@ -65,6 +69,10 @@ class ComposerStaticInit2ac380eee7a7a479ad545bf843fca9ad
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Monolog\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
         'Kacademy\\' => 
         array (
@@ -110,6 +118,13 @@ class ComposerStaticInit2ac380eee7a7a479ad545bf843fca9ad
             'Sunra\\PhpSimple\\HtmlDomParser' => 
             array (
                 0 => __DIR__ . '/..' . '/sunra/php-simple-html-dom-parser/Src',
+            ),
+        ),
+        'P' => 
+        array (
+            'Psr\\Log\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/psr/log',
             ),
         ),
         'K' => 
