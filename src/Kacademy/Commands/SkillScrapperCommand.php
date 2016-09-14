@@ -5,7 +5,6 @@ namespace Kacademy\Commands;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
@@ -103,6 +102,7 @@ EOT
                                 ->where('ka_url', '<>', NULL)
                                 ->where('ka_url', '<>', '')
                                 ->where('parent_id', '<>', NULL)
+                                ->where('skills_scrapped', '=', 0)
                                 ->get();
 
         $scrapper = new SkillScrapper();
@@ -112,13 +112,16 @@ EOT
             foreach ($topics as $topic)
             {
                 $topicUrl    = $topic->ka_url;
-                $topicId     = $topic->id;
-
+                
                 $scrapper->setUrl($topicUrl);
-                $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topicId)
+                $scrapper->runScrapper(function($skills) use ($scrapper, $output, $topic)
                 {
+                    $totalCount = count($skills);
+                    
                     if(!empty($skills))
                     {
+                        $topicId     = $topic->id;
+                        
                         foreach ($skills as $skill) {
 
                             $skill['topic_id']  = $topicId;
@@ -126,7 +129,12 @@ EOT
                             SkillModel::create($skill);
                         }
                     }
-                    $output->writeln('<info>Total Skills Scrapped:: '.count($skills).'</info>'.PHP_EOL);
+                    
+                    // Set total skills scrapped for this subtopic
+                    $topic->skills_scrapped = $totalCount;
+                    $topic->save();
+                    
+                    $output->writeln('<info>Total Skills Scrapped:: '.$totalCount.'</info>'.PHP_EOL);
                 });
             }
         }

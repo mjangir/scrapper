@@ -23,6 +23,12 @@ class BaseScrapper {
      * @var $htmlDom
      */
     protected $htmlDom;
+    
+    /**
+     * HTTP Client
+     * @var obj 
+     */
+    protected $httpClient;
 
     /**
      * Class constructor
@@ -30,7 +36,11 @@ class BaseScrapper {
      * @return void
      */
     public function __construct() {
-        
+        $this->httpClient = new \GuzzleHttp\Client(array('curl' => array(CURLOPT_SSL_VERIFYPEER => false)));
+    }
+    
+    protected function getHttpClient() {
+        return $this->httpClient;
     }
 
     /**
@@ -57,11 +67,48 @@ class BaseScrapper {
      * @return string
      */
     public function getHtml() {
+        $client     = $this->getHttpClient();
+
+//        $client->getEventDispatcher()->addListener('request.error', function(Event $event) {   
+//            
+//            if ($event['response']->getStatusCode() != 200) {
+//                $newRequest = $event['request']->clone();
+//                $newResponse = $newRequest->send();
+//                // Set the response object of the request without firing more events
+//                $event['response'] = $newResponse;
+//                // You can also change the response and fire the normal chain of
+//                // events by calling $event['request']->setResponse($newResponse);
+//                // Stop other events from firing when you override 401 responses
+//                $event->stopPropagation();
+//            
+//            }            
+//        });
+
         try {
-            $client = new \GuzzleHttp\Client(array('curl' => array(CURLOPT_SSL_VERIFYPEER => false)));
-            $response = $client->request('GET', $this->getUrl());
+            $response   = $client->request('GET', $this->getUrl());
             return $response->getBody();
-        } catch (Exception $e) {
+        }
+        catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
+            $req = $e->getRequest();
+            $resp =$e->getResponse();
+            return NULL;
+            //displayTest($req,$resp);
+        }
+        catch (Guzzle\Http\Exception\ServerErrorResponseException $e) {
+
+            $req = $e->getRequest();
+            $resp =$e->getResponse();
+            return NULL;
+            //displayTest($req,$resp);
+        }
+        catch (Guzzle\Http\Exception\BadResponseException $e) {
+
+            $req = $e->getRequest();
+            $resp =$e->getResponse();
+            return NULL;
+            //displayTest($req,$resp);
+        }
+        catch( Exception $e){
             return NULL;
         }
     }

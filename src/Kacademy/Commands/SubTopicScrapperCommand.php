@@ -102,6 +102,7 @@ EOT
                                 ->where('ka_url', '<>', NULL)
                                 ->where('ka_url', '<>', '')
                                 ->where('parent_id', '=', NULL)
+                                ->where('skills_scrapped', '=', 0)
                                 ->get();
 
         $scrapper = new SubTopicScrapper();
@@ -111,14 +112,17 @@ EOT
             foreach ($topics as $topic) {
 
                 $topicUrl    = $topic->ka_url;
-                $topicId     = $topic->id;
-                $subjectId   = $topic->subject_id;
-
+                
                 $scrapper->setUrl($topicUrl);
-                $scrapper->runScrapper(function($subTopics) use ($scrapper, $output, $subjectId, $topicId)
+                $scrapper->runScrapper(function($subTopics) use ($scrapper, $output, $topic)
                 {
+                    $totalCount = count($subTopics);
+                    
                     if(!empty($subTopics))
                     {
+                        $topicId     = $topic->id;
+                        $subjectId   = $topic->subject_id;
+                
                         foreach ($subTopics as $subTopic) {
 
                             $subTopic['parent_id']  = $topicId;
@@ -127,7 +131,12 @@ EOT
                             TopicModel::create($subTopic);
                         }
                     }
-                    $output->writeln('<info>Total Sub Topics Scrapped:: '.count($subTopics).'</info>'.PHP_EOL);
+                    
+                    // Set total sub topics scrapped for this main topic
+                    $topic->sub_topics_scrapped = $totalCount;
+                    $topic->save();
+                    
+                    $output->writeln('<info>Total Sub Topics Scrapped:: '.$totalCount.'</info>'.PHP_EOL);
                 });
             }
         }

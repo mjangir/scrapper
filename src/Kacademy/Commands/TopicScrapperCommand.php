@@ -5,7 +5,6 @@ namespace Kacademy\Commands;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
@@ -104,20 +103,22 @@ EOT
         // Get all subjects
         $subjects = SubjectModel::where('is_active', 1)
                                 ->where('ka_url', '<>', NULL)
-                                ->where('parent_id', '<>', NULL)
                                 ->where('ka_url', '<>', '')
+                                ->where('parent_id', '<>', NULL)
+                                ->where('topics_scrapped', '=', 0)
                                 ->get();
         if(!empty($subjects))
         {
             foreach ($subjects as $subject) {
-
-                $subjectUrl    = $subject->ka_url;
-                $subjectId     = $subject->id;
-
-                $scrapper = new TopicScrapper();
+                $subjectUrl     = $subject->ka_url;
+                $scrapper       = new TopicScrapper();
+                
                 $scrapper->setUrl($subjectUrl);
-                $scrapper->runScrapper(function($topics) use ($scrapper, $output, $subjectId) {
-
+                $scrapper->runScrapper(function($topics) use ($scrapper, $output, $subject) {
+                    
+                    $subjectId      = $subject->id;
+                    $totalTopics    = count($topics);
+                    
                     if(!empty($topics))
                     {
                         foreach ($topics as $key => $topic) {
@@ -127,7 +128,11 @@ EOT
                             TopicModel::create($topic);
                         }
                     }
-                    $output->writeln('<info>Total Topics Scrapped:: '.count($topics).'</info>'.PHP_EOL);
+                    // Save number of topics scrapped for the subject
+                    $subject->topics_scrapped = $totalTopics;
+                    $subject->save();
+                    
+                    $output->writeln('<info>Total Topics Scrapped:: '.$totalTopics.'</info>'.PHP_EOL);
                 });
             }
         }                            
