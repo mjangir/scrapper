@@ -24,6 +24,10 @@ use Kacademy\Commands\TipsScrapperCommand;
 use Kacademy\Commands\CommentScrapperCommand;
 use Kacademy\Commands\UserProfileScrapperCommand;
 
+use Kacademy\Commands\NewSubjectScrapperCommand;
+use Kacademy\Commands\NewTopicScrapperCommand;
+use Kacademy\Commands\NewSubTopicScrapperCommand;
+
 $app = new Application();
 $app->add(new SubjectScrapperCommand());
 $app->add(new TopicScrapperCommand());
@@ -34,4 +38,8 @@ $app->add(new QuestionScrapperCommand());
 $app->add(new TipsScrapperCommand());
 $app->add(new CommentScrapperCommand());
 $app->add(new UserProfileScrapperCommand());
+
+$app->add(new NewSubjectScrapperCommand());
+$app->add(new NewTopicScrapperCommand());
+$app->add(new NewSubTopicScrapperCommand());
 $app->run();

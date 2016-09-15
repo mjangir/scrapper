@@ -6,7 +6,7 @@ $capsule->addConnection([
   'driver'    => 'mysql',
   'host'      => 'localhost',
   'port'      => '3306',
-  'database'  => 'khanacademy_clone',
+  'database'  => 'new_khaacadmey',
   'username'  => 'root',
   'password'  => '',
   'charset'   => 'utf8',

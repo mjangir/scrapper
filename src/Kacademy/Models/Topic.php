@@ -3,11 +3,10 @@
 namespace Kacademy\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Carbon\Carbon;
 
 class Topic extends Eloquent {
 
-	/**
+    /**
      * The attributes that aren't mass assignable.
      *
      * @var array
@@ -19,5 +18,6 @@ class Topic extends Eloquent {
      *
      * @var bool
      */
-	public $timestamps = true;
+    public $timestamps = true;
+
 }

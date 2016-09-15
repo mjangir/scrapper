@@ -4,7 +4,7 @@ namespace Kacademy\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
-class Subject extends Eloquent {
+class Domain extends Eloquent {
 
     /**
      * The attributes that aren't mass assignable.

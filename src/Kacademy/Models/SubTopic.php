@@ -4,7 +4,7 @@ namespace Kacademy\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
-class Subject extends Eloquent {
+class SubTopic extends Eloquent {
 
     /**
      * The attributes that aren't mass assignable.
@@ -19,4 +19,12 @@ class Subject extends Eloquent {
      * @var bool
      */
     public $timestamps = true;
+    
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'sub_topics';
+
 }
