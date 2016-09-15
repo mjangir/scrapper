@@ -20,7 +20,7 @@ class TranscriptScrapperCommand extends Command {
      * @return void
      */
     protected function configure() {
-        $this->setName("scrap:skill-transcripts")
+        $this->setName("scrap:transcripts")
                 ->setDescription("This command scraps all the transcripts of a skill video")
                 ->setDefinition(array(
                     new InputOption('refresh', 'r')

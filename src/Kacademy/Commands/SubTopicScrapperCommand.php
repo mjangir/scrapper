@@ -8,8 +8,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Kacademy\Scrappers\SubTopicScrapper;
+use Kacademy\Scrappers\CommonTopicScrapper;
 use Kacademy\Models\Topic as TopicModel;
+use Kacademy\Models\SubTopic as SubTopicModel;
 
 class SubTopicScrapperCommand extends Command {
 
@@ -20,25 +21,18 @@ class SubTopicScrapperCommand extends Command {
      */
     protected function configure() {
         $this->setName("scrap:sub-topics")
-                ->setDescription("This command scraps all the sub topics of a topic")
+                ->setDescription("This command scraps all the sub-topic names")
                 ->setDefinition(array(
-                    new InputOption('refresh', 'r'),
-                    new InputOption('topic-id', 't', InputOption::VALUE_OPTIONAL, 'Topic Id Primary Key', false)
+                    new InputOption('refresh', 'r')
                 ))
                 ->setHelp(<<<EOT
-Scraps all sub topics (Filters applicable)
+Scraps all topic name
 
 Usage:
 
 The following command will delete all existing records and add from the begining
-<info>scrap:skill-groups --refresh</info>
-<info>scrap:skill-groups -r</info>
-
-FILTERING:
-
-Grab the sub topics for a specific Topic ID. Provide the database Topic ID primary key with the above commands combination.
-<info>scrap:topics --topic-id 5</info>
-<info>scrap:topics -t 5</info>
+<info>scrap:topics --refresh</info>
+<info>scrap:topics -r</info>
 
 EOT
         );
@@ -71,66 +65,63 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         } else if ($refresh) {
-            TopicModel::where('parent_id', '<>', NULL)->delete();
+            SubTopicModel::getQuery()->delete();
         }
-
+        
         // Get all topics for which the sub-topics have to be scrapped
         $topics = TopicModel::where('is_active', 1)
-                ->where('ka_url', '<>', NULL)
-                ->where('ka_url', '<>', '')
-                ->where('parent_id', '=', NULL)
-                ->where('skills_scrapped', '=', 0)
+                ->where('node_slug', '<>', NULL)
+                ->where('node_slug', '<>', '')
+                ->where('sub_topic_scrapped', '=', 0)
                 ->get();
-
         
-        // If topics found for which no sub-topics exists in database
-        if (!empty($topics)) {
+        // If topics are not empty
+        if(!empty($topics)) {
             
-            // Iterate over those topics
-            $i = 1;
             foreach ($topics as $topic) {
+                
+                // Create scrapper instance
+                $scrapper = new CommonTopicScrapper();
+                $scrapper->setUrl('https://www.khanacademy.org/api/v1/topic/'.$topic->node_slug);
+                $scrapper->runScrapper(function($record) use ($scrapper, $output, $topic) {
 
-                $topicUrl = $topic->ka_url;
+                    $totalRecords  = (isset($record['children'])) ? count($record['children']) : 0;
 
-                // Create Sub Topic Scrapper Object
-                $scrapper = new SubTopicScrapper();
-                $scrapper->setUrl($topicUrl);
-                $scrapper->runScrapper(function($subTopics) use ($scrapper, $output, $topic, $i) {
+                    // Log the topic name on console for which sub-topics are being scrapped
+                    $output->writeln("<info>Topic:: ".$topic->title."</info>" . PHP_EOL);
                     
-                    // Log the topic name on console for which the sub-topics are being scrapped
-                    $output->writeln($i.". ".$topic->title. PHP_EOL);
-                    
-                    $totalSubTopics = count($subTopics);
-
-                    // If sub topics found in scrapping
-                    if (!empty($subTopics)) {
-                        
-                        $topicId    = $topic->id;
-                        $subjectId  = $topic->subject_id;
-
-                        // Iterate over each sub-topic and insert them into DB
-                        foreach ($subTopics as $key => $subTopic) {
-
-                            $subTopicSrNo           = $key + 1;
-                            $subTopic['parent_id']  = $topicId;
-                            $subTopic['subject_id'] = $subjectId;
-                            TopicModel::create($subTopic);
-                            
-                            // Log the sub-topic on console
-                            $output->writeln("---".$subTopicSrNo.". ".$subTopic['title']. PHP_EOL);
+                    // If parent record info is not empty
+                    if (!empty($record['parent'])) {
+                        $parent = $record['parent'];
+                        foreach($parent as $key => $value) {
+                            $topic->{$key} = $value;
                         }
-                        
-                        // Set total sub topics scrapped for this main topic
-                        $topic->sub_topics_scrapped = $totalSubTopics;
                         $topic->save();
                     }
-                    // Show the completion message on console
-                    $output->writeln("<info>Sub-Topics Scrapping Completed</info>");
+                    
+                    // If children were found then add them
+                    if (!empty($record['children'])) {
+                        
+                        $children = $record['children'];
+                        
+                        foreach($children as $child) {
+                            $child['topic_id'] = $topic->id;
+                            SubTopicModel::create($child);
+                            
+                            // Log the scrapped sub-topic on console
+                            $output->writeln("---".$child['title']. PHP_EOL);
+                        }
+                        
+                        // Update total scrapped element to their parent table
+                        $topic->sub_topic_scrapped = $totalRecords;
+                        $topic->save();
+                    }
                 });
-                
-                $i++;
             }
+            // Show the completion message on console
+            $output->writeln("<info>Sub Topics Scrapping Completed</info>");
         }
+        
     }
 
 }

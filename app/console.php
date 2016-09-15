@@ -14,32 +14,18 @@ require_once __DIR__ . '/config/database.php';
 
 // import the Symfony Console Application 
 use Symfony\Component\Console\Application; 
+use Kacademy\Commands\TranscriptScrapperCommand;
 use Kacademy\Commands\SubjectScrapperCommand;
 use Kacademy\Commands\TopicScrapperCommand;
 use Kacademy\Commands\SubTopicScrapperCommand;
-use Kacademy\Commands\SkillScrapperCommand;
-use Kacademy\Commands\TranscriptScrapperCommand;
-use Kacademy\Commands\QuestionScrapperCommand;
-use Kacademy\Commands\TipsScrapperCommand;
-use Kacademy\Commands\CommentScrapperCommand;
-use Kacademy\Commands\UserProfileScrapperCommand;
-
-use Kacademy\Commands\NewSubjectScrapperCommand;
-use Kacademy\Commands\NewTopicScrapperCommand;
-use Kacademy\Commands\NewSubTopicScrapperCommand;
+use Kacademy\Commands\VideoScrapperCommand;
+use Kacademy\Commands\ExerciseScrapperCommand;
 
 $app = new Application();
+$app->add(new TranscriptScrapperCommand());
 $app->add(new SubjectScrapperCommand());
 $app->add(new TopicScrapperCommand());
 $app->add(new SubTopicScrapperCommand());
-$app->add(new SkillScrapperCommand());
-$app->add(new TranscriptScrapperCommand());
-$app->add(new QuestionScrapperCommand());
-$app->add(new TipsScrapperCommand());
-$app->add(new CommentScrapperCommand());
-$app->add(new UserProfileScrapperCommand());
-
-$app->add(new NewSubjectScrapperCommand());
-$app->add(new NewTopicScrapperCommand());
-$app->add(new NewSubTopicScrapperCommand());
+$app->add(new VideoScrapperCommand());
+$app->add(new ExerciseScrapperCommand());
 $app->run();

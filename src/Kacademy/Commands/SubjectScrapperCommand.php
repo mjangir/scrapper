@@ -8,7 +8,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Kacademy\Scrappers\SubjectScrapper;
+use Kacademy\Scrappers\CommonTopicScrapper;
+use Kacademy\Models\Domain as DomainModel;
 use Kacademy\Models\Subject as SubjectModel;
 
 class SubjectScrapperCommand extends Command {
@@ -66,56 +67,61 @@ EOT
         } else if ($refresh) {
             SubjectModel::getQuery()->delete();
         }
+        
+        // Get all domains for which the subjects have to be scrapped
+        $domains = DomainModel::where('is_active', 1)
+                ->where('node_slug', '<>', NULL)
+                ->where('node_slug', '<>', '')
+                ->where('subject_scrapped', '=', 0)
+                ->get();
+        
+        // If domains are not empty
+        if(!empty($domains)) {
+            
+            foreach ($domains as $domain) {
+                
+                // Create scrapper instance
+                $scrapper = new CommonTopicScrapper();
+                $scrapper->setUrl('https://www.khanacademy.org/api/v1/topic/'.$domain->node_slug);
+                $scrapper->runScrapper(function($record) use ($scrapper, $output, $domain) {
 
-        // Create scrapper instance
-        $scrapper = new SubjectScrapper();
-        $scrapper->setUrl('');
-        $scrapper->runScrapper(function($subjects) use ($scrapper, $output) {
+                    $totalRecords  = (isset($record['children'])) ? count($record['children']) : 0;
 
-            $totalSubjects      = count($subjects);
-            $totalChildSubjects = 0;
-
-            // If subjects are not empty
-            if (!empty($subjects)) {
-                $i = 1;
-                foreach ($subjects as $key => $mainSubject) {
-
-                    // Create Subject Model Instance and create main subject
-                    $subjectModel = new SubjectModel();
-                    $saveMain = $subjectModel->create(
-                        array(
-                            'title'     => $mainSubject['title'],
-                            'slug'      => $mainSubject['slug'],
-                            'ka_url'    => $mainSubject['ka_url']
-                        )
-                    );
+                    // Log the domain name on console for which subjects are being scrapped
+                    $output->writeln("<info>Domain:: ".$domain->title."</info>" . PHP_EOL);
                     
-                    // Log the main subject on console
-                    $output->writeln($i. ". ".$mainSubject['title']. PHP_EOL);
-
-                    // If the main subject has some child subjects
-                    if (isset($mainSubject['children']) && !empty($mainSubject['children'])) {
+                    // If parent record info is not empty
+                    if (!empty($record['parent'])) {
+                        $parent = $record['parent'];
+                        foreach($parent as $key => $value) {
+                            $domain->{$key} = $value;
+                        }
+                        $domain->save();
+                    }
+                    
+                    // If children were found then add them
+                    if (!empty($record['children'])) {
                         
-                        $childrenCount       = count($mainSubject['children']);
+                        $children = $record['children'];
                         
-                        // Save each child subject in the database
-                        foreach ($mainSubject['children'] as $key => $childSubject) {
-                            $saveMain->children()->create($childSubject);
-                            $childNumber = $key + 1;
-                            $output->writeln("---".$childNumber. " ".$childSubject['title']. PHP_EOL);
+                        foreach($children as $child) {
+                            $child['domain_id'] = $domain->id;
+                            SubjectModel::create($child);
+                            
+                            // Log the scrapped subject on console
+                            $output->writeln("---".$child['title']. PHP_EOL);
                         }
                         
-                        //Save child subjects scrapped field
-                        $saveMain->child_subjects_scrapped = $childrenCount;
-                        $saveMain->save();
+                        // Update total scrapped element to their parent table
+                        $domain->subject_scrapped = $totalRecords;
+                        $domain->save();
                     }
-
-                    $i++;
-                }
+                });
             }
             // Show the completion message on console
             $output->writeln("<info>Subjects Scrapping Completed</info>");
-        });
+        }
+        
     }
 
 }

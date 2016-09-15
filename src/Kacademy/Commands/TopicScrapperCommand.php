@@ -8,9 +8,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Kacademy\Scrappers\TopicScrapper;
-use Kacademy\Models\Topic as TopicModel;
+use Kacademy\Scrappers\CommonTopicScrapper;
 use Kacademy\Models\Subject as SubjectModel;
+use Kacademy\Models\Topic as TopicModel;
 
 class TopicScrapperCommand extends Command {
 
@@ -21,25 +21,18 @@ class TopicScrapperCommand extends Command {
      */
     protected function configure() {
         $this->setName("scrap:topics")
-                ->setDescription("This command scraps all the topics of a skill")
+                ->setDescription("This command scraps all the topic names")
                 ->setDefinition(array(
-                    new InputOption('refresh', 'r'),
-                    new InputOption('subject-id', 's', InputOption::VALUE_OPTIONAL, 'Subject Id Primary Key', false)
+                    new InputOption('refresh', 'r')
                 ))
                 ->setHelp(<<<EOT
-Scraps all topics (Filters applicable)
+Scraps all topic name
 
 Usage:
 
 The following command will delete all existing records and add from the begining
 <info>scrap:topics --refresh</info>
 <info>scrap:topics -r</info>
-
-FILTERING:
-
-Grab the topics for a specific subject ID. Provide the database subject ID primary key with the above commands combination.
-<info>scrap:topics --subject-id 5</info>
-<info>scrap:topics -s 5</info>
 
 EOT
         );
@@ -55,17 +48,15 @@ EOT
      */
     protected function execute(InputInterface $input, OutputInterface $output) {
         $helper = $this->getHelper('question');
-        $purgeQuestion = new ConfirmationQuestion('This will delete all previous topics. Are you sure, you want to continue this action.?', false);
+        $purgeQuestion = new ConfirmationQuestion('This will delete all previous subjects. Are you sure, you want to continue this action.?', false);
 
         // Get all inputs
         $refresh = $input->getOption('refresh');
 
-        // Output format styles
         $errorStyle = new OutputFormatterStyle('red');
         $successStyle = new OutputFormatterStyle('green');
         $gettingStyle = new OutputFormatterStyle('yellow');
 
-        // Apply output styles
         $output->getFormatter()->setStyle('error', $errorStyle);
         $output->getFormatter()->setStyle('info', $successStyle);
         $output->getFormatter()->setStyle('getting', $gettingStyle);
@@ -74,65 +65,63 @@ EOT
         if ($refresh && !$helper->ask($input, $output, $purgeQuestion)) {
             return;
         } else if ($refresh) {
-            // If refresh option provided, delete all topics
             TopicModel::getQuery()->delete();
         }
-
+        
         // Get all subjects for which the topics have to be scrapped
         $subjects = SubjectModel::where('is_active', 1)
-                ->where('ka_url', '<>', NULL)
-                ->where('ka_url', '<>', '')
-                ->where('parent_id', '<>', NULL)
-                ->where('topics_scrapped', '=', 0)
+                ->where('node_slug', '<>', NULL)
+                ->where('node_slug', '<>', '')
+                ->where('topic_scrapped', '=', 0)
                 ->get();
-
-        // If subjects are found, then start scrapping
-        if (!empty($subjects)) {
+        
+        // If subjects are not empty
+        if(!empty($subjects)) {
             
-            // Iterate over subjects
-            $i = 1;
             foreach ($subjects as $subject) {
                 
-                $subjectUrl = $subject->ka_url;
-                
-                // Create Topic Scrapper Object
-                $scrapper = new TopicScrapper();
-                $scrapper->setUrl($subjectUrl);
-                $scrapper->runScrapper(function($topics) use ($scrapper, $output, $subject, $i) {
+                // Create scrapper instance
+                $scrapper = new CommonTopicScrapper();
+                $scrapper->setUrl('https://www.khanacademy.org/api/v1/topic/'.$subject->node_slug);
+                $scrapper->runScrapper(function($record) use ($scrapper, $output, $subject) {
 
-                    $subjectId = $subject->id;
-                    $totalTopics = count($topics);
+                    $totalRecords  = (isset($record['children'])) ? count($record['children']) : 0;
+
+                    // Log the subject name on console for which subjects are being scrapped
+                    $output->writeln("<info>Subject:: ".$subject->title."</info>" . PHP_EOL);
                     
-                    // Log the subject name on console for which topics are being scrapped
-                    $output->writeln("<info>".$i.". Subject:: ".$subject->title."</info>" . PHP_EOL);
-
-                    // If topics found for the particular subject
-                    if (!empty($topics)) {
-                        
-                        // Iterate over each topic
-                        foreach ($topics as $key => $topic) {
-                            
-                            $topicSrNo = $key + 1;
-                            // Pass subject ID as foreign key for each topic
-                            $topic['subject_id'] = $subjectId;
-                            TopicModel::create($topic);
-                            
-                            // Log the scrapped topic on console
-                            $output->writeln("---".$topicSrNo.". ".$topic['title']. PHP_EOL);
+                    // If parent record info is not empty
+                    if (!empty($record['parent'])) {
+                        $parent = $record['parent'];
+                        foreach($parent as $key => $value) {
+                            $subject->{$key} = $value;
                         }
-                        
-                        // Save number of topics scrapped for the subject
-                        $subject->topics_scrapped = $totalTopics;
                         $subject->save();
                     }
                     
-                    // Show the completion message on console
-                    $output->writeln("<info>Topics Scrapping Completed</info>");
+                    // If children were found then add them
+                    if (!empty($record['children'])) {
+                        
+                        $children = $record['children'];
+                        
+                        foreach($children as $child) {
+                            $child['subject_id'] = $subject->id;
+                            TopicModel::create($child);
+                            
+                            // Log the scrapped subject on console
+                            $output->writeln("---".$child['title']. PHP_EOL);
+                        }
+                        
+                        // Update total scrapped element to their parent table
+                        $subject->topic_scrapped = $totalRecords;
+                        $subject->save();
+                    }
                 });
-                
-                $i++;
             }
+            // Show the completion message on console
+            $output->writeln("<info>Topics Scrapping Completed</info>");
         }
+        
     }
 
 }
