@@ -20,7 +20,7 @@ class ExerciseScrapperCommand extends Command {
      * @return void
      */
     protected function configure() {
-        $this->setName("scrap:new-exercises")
+        $this->setName("scrap:exercises")
                 ->setDescription("This command scraps all the sub-topic exercises")
                 ->setDefinition(array(
                     new InputOption('refresh', 'r')
