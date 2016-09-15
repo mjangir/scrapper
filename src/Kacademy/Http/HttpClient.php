@@ -44,7 +44,7 @@ class HttpClient {
 
         try {
             $requestResponse = $this->client->request($type, $url);
-            $response = $requestResponse->getBody();
+            $response = $requestResponse->getBody()->getContents();
             
             $logMessage .= "Success Request".PHP_EOL;
             
