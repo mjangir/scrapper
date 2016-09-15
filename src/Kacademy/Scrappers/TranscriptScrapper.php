@@ -57,6 +57,8 @@ class TranscriptScrapper extends BaseScrapper {
         $contents = $this->getHtml();
 
         $jsonToArray = array();
+        
+        $contents = (string)$contents;
 
         if (!empty($contents)) {
             $jsonToArray = json_decode($contents, true);

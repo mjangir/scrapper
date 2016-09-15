@@ -74,8 +74,8 @@ EOT
         // Get all skills for which the transcripts have to be scrapped
         $skills = SkillModel::where('is_active', 1)
                 ->where('type', '=', 'Video')
-                ->where('video_youtube_id', '<>', NULL)
-                ->where('transcrispt_scrapped', '=', 0)
+                ->where('youtube_id', '<>', NULL)
+                ->where('transcript_scrapped', '=', 0)
                 ->get();
 
         // If skills are found, then start scrapping
@@ -85,7 +85,7 @@ EOT
             $i = 1;
             foreach ($skills as $skill) {
                 
-                $urlToScrap = "videos/{$skill->video_youtube_id}/transcript?casing=camel&locale=en&lang=en";
+                $urlToScrap = "videos/{$skill->youtube_id}/transcript?casing=camel&locale=en&lang=en";
                 
                 // Create Transcript Scrapper Object
                 $scrapper = new TranscriptScrapper();
@@ -95,19 +95,19 @@ EOT
                     $skillId            = $skill->id;
                     $totalTranscripts   = count($transcripts);
                     
-                    // Log the skill name on console for which transcripts are being scrapped
-                    $output->writeln("<info>".$i.". Skill:: ".$skill->title."</info>" . PHP_EOL);
-
                     // If transcripts found for the particular subject
                     if (!empty($transcripts)) {
                         
+                        // Log the skill name on console for which transcripts are being scrapped
+                        $output->writeln("<info>".$i.". Skill:: ".$skill->title."</info>" . PHP_EOL);
+                    
                         // Iterate over each transcript
                         foreach ($transcripts as $key => $transcript) {
                             
                             $srNo = $key + 1;
                             // Pass skill ID as foreign key for each transcript
                             $transcript['skill_id']         = $skillId;
-                            $transcript['youtube_video_id'] = $skill->video_youtube_id;
+                            $transcript['youtube_id'] = $skill->youtube_id;
                             SkillTranscriptModel::create($transcript);
                             
                             // Log the scrapped transcript on console
@@ -115,8 +115,11 @@ EOT
                         }
                         
                         // Save number of transcripts scrapped for the skill
-                        $skill->transcrispt_scrapped = $totalTranscripts;
+                        $skill->transcript_scrapped = $totalTranscripts;
                         $skill->save();
+                    } else {
+                        // Not completed skills
+                        $output->writeln("<error>Not Completed - ".$i.". Skill:: ".$skill->title."</error>" . PHP_EOL);
                     }
                     
                     // Show the completion message on console
