@@ -20,6 +20,7 @@ use Kacademy\Commands\TopicScrapperCommand;
 use Kacademy\Commands\SubTopicScrapperCommand;
 use Kacademy\Commands\VideoScrapperCommand;
 use Kacademy\Commands\ExerciseScrapperCommand;
+use Kacademy\Commands\DomainScrapperCommand;
 
 $app = new Application();
 $app->add(new TranscriptScrapperCommand());
@@ -28,4 +29,5 @@ $app->add(new TopicScrapperCommand());
 $app->add(new SubTopicScrapperCommand());
 $app->add(new VideoScrapperCommand());
 $app->add(new ExerciseScrapperCommand());
+$app->add(new DomainScrapperCommand());
 $app->run();
