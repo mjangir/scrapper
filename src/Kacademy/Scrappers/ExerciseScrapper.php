@@ -56,13 +56,11 @@ class ExerciseScrapper extends BaseScrapper {
         
         $jsonToArray = array();
         
-        try {
+        if(is_string($this->getHtml())) {
             $contents = (string)$this->getHtml();
             if (!empty($contents) && $contents != '') {
                 $jsonToArray = json_decode($contents, true);
             }
-        } catch (Exception $exc) {
-            //echo $exc->getTraceAsString();
         }
 
         return $jsonToArray;

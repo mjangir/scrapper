@@ -82,18 +82,13 @@ class QuestionScrapper extends BaseScrapper {
         
         $jsonToArray = array();
         
-        try {
-            $contents = $this->getHtml();
-
-            $contents = (string)$contents;
-
-            if (!empty($contents)) {
+        if(is_string($this->getHtml())) {
+            $contents = (string)$this->getHtml();
+            if (!empty($contents) && $contents != '') {
                 $jsonToArray = json_decode($contents, true);
             }
-        } catch (Exception $ex) {
-            
         }
-        
+
         return $jsonToArray;
     }
     

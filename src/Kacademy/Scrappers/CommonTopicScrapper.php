@@ -54,13 +54,15 @@ class CommonTopicScrapper extends BaseScrapper {
      */
     private function extractJson() {
         
-        $contents = $this->getHtml();
-
         $jsonToArray = array();
-
-        if (!empty($contents)) {
-            $jsonToArray = json_decode($contents, true);
+        
+        if(is_string($this->getHtml())) {
+            $contents = (string)$this->getHtml();
+            if (!empty($contents) && $contents != '') {
+                $jsonToArray = json_decode($contents, true);
+            }
         }
+
         return $jsonToArray;
     }
 
