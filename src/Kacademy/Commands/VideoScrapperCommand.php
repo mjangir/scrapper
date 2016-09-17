@@ -78,12 +78,13 @@ EOT
         // If sub-topics are not empty
         if(!empty($subTopics)) {
             
+            
+            // Create scrapper instance
+            $scrapper = new VideoScrapper();
+                
             foreach ($subTopics as $subTopic) {
                 
-                // Create scrapper instance
-                $scrapper = new VideoScrapper();
                 $scrapper->setUrl('https://www.khanacademy.org/api/v1/topic/'.$subTopic->node_slug.'/videos');
-                echo 'https://www.khanacademy.org/api/v1/topic/'.$subTopic->node_slug.'/videos';
                 $scrapper->runScrapper(function($records) use ($scrapper, $output, $subTopic) {
 
                     $totalRecords  = count($records);

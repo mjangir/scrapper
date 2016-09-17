@@ -78,10 +78,11 @@ EOT
         // If sub-topics are not empty
         if(!empty($subTopics)) {
             
+            // Create scrapper instance
+            $scrapper = new ExerciseScrapper();
+                
             foreach ($subTopics as $subTopic) {
                 
-                // Create scrapper instance
-                $scrapper = new ExerciseScrapper();
                 $scrapper->setUrl('https://www.khanacademy.org/api/v1/topic/'.$subTopic->node_slug.'/exercises');
                 $scrapper->runScrapper(function($records) use ($scrapper, $output, $subTopic) {
 

@@ -4,7 +4,7 @@ namespace Kacademy\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
-class Skill extends Eloquent {
+class Post extends Eloquent {
 
     /**
      * The attributes that aren't mass assignable.

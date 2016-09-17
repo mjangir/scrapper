@@ -54,13 +54,17 @@ class VideoScrapper extends BaseScrapper {
      */
     private function extractJson() {
         
-        $contents = (string)$this->getHtml();
-
         $jsonToArray = array();
-
-        if (!empty($contents) && $contents != '') {
-            $jsonToArray = json_decode($contents, true);
+        
+        try {
+            $contents = (string)$this->getHtml();
+            if (!empty($contents) && $contents != '') {
+                $jsonToArray = json_decode($contents, true);
+            }
+        } catch (Exception $exc) {
+            //echo $exc->getTraceAsString();
         }
+
         return $jsonToArray;
     }
 
