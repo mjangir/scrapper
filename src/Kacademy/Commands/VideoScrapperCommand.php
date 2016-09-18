@@ -73,7 +73,6 @@ EOT
                 ->where('node_slug', '<>', NULL)
                 ->where('node_slug', '<>', '')
                 ->where('video_scrapped', '=', 0)
-                ->where('id', '>', 7745)
                 ->get();
         
         // If sub-topics are not empty

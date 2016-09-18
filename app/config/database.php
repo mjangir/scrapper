@@ -9,8 +9,8 @@ $capsule->addConnection([
   'database'  => 'khanacademy_clone',
   'username'  => 'root',
   'password'  => '',
-  'charset'   => 'utf8',
-  'collation' => 'utf8_unicode_ci',
+  'charset'   => 'utf8mb4',
+  'collation' => 'utf8mb4_unicode_ci',
 ]);
 $capsule->setAsGlobal();
 $capsule->bootEloquent();

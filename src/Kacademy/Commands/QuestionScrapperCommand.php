@@ -104,11 +104,11 @@ EOT
                     if (!empty($questions)) {
                         
                         // Log the skill name on console for which questions are being scrapped
-                        //$output->writeln("<info>".$i.". Skill:: ".$skill->title."</info>" . PHP_EOL);
+                        $output->writeln("<info>".$i.". Skill:: ".$skill->title."</info>" . PHP_EOL);
                         
                         // Log the skill name on console for which questions are being scrapped
-                        $output->writeln($scrapper->getUrl(). PHP_EOL);
-                        $output->writeln('-------'.count($questions));
+//                        $output->writeln($scrapper->getUrl(). PHP_EOL);
+//                        $output->writeln('-------'.count($questions));
                     
                         // Iterate over each question
                         foreach ($questions as $key => $question) {
@@ -132,7 +132,7 @@ EOT
                                         $insertedAnswer = PostModel::create($answer);
                                         
                                         if($insertedAnswer) {
-                                            //$output->writeln("------Answer :: ".$answer['content']. PHP_EOL);
+                                            $output->writeln("------Answer :: ".$answer['content']. PHP_EOL);
                                         }
                                     }
                                 }
@@ -144,7 +144,7 @@ EOT
                         $skill->save();
                     } else {
                         // Not completed skills
-                        //$output->writeln("<error>Not Completed - ".$i.". Skill:: ".$skill->title."</error>" . PHP_EOL);
+                        $output->writeln("<error>Not Completed - ".$i.". Skill:: ".$skill->title."</error>" . PHP_EOL);
                     }
                 });
                 
@@ -152,7 +152,7 @@ EOT
             }
             
             // Show the completion message on console
-            //$output->writeln("<info>Questions Scrapping Completed</info>");
+            $output->writeln("<info>Questions Scrapping Completed</info>");
         }
     }
 
