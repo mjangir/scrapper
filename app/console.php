@@ -23,6 +23,7 @@ use Kacademy\Commands\ExerciseScrapperCommand;
 use Kacademy\Commands\DomainScrapperCommand;
 use Kacademy\Commands\QuestionScrapperCommand;
 use Kacademy\Commands\TipScrapperCommand;
+use Kacademy\Commands\CommentScrapperCommand;
 
 $app = new Application();
 $app->add(new TranscriptScrapperCommand());
@@ -34,4 +35,5 @@ $app->add(new ExerciseScrapperCommand());
 $app->add(new DomainScrapperCommand());
 $app->add(new QuestionScrapperCommand());
 $app->add(new TipScrapperCommand());
+$app->add(new CommentScrapperCommand());
 $app->run();
