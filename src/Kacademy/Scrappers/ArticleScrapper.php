@@ -98,9 +98,8 @@ class ArticleScrapper extends BaseScrapper {
         $result     = $this->extractJson();
         
         $articles = array();
-        
-        if(isset($result['modules']) && !empty($result['modules'])) {
-            foreach($result['modules'] as $module) {
+        if(isset($result['curation']['tabs'][0]['modules']) && !empty($result['curation']['tabs'][0]['modules'])) {
+            foreach($result['curation']['tabs'][0]['modules'] as $module) {
                 
                 if(isset($module['slug']) && !empty($module['slug']) && $module['slug'] == $this->getNodeSlug()) {
                     
@@ -121,7 +120,6 @@ class ArticleScrapper extends BaseScrapper {
             }
         }
 	return $articles;
-        
     }
     
     /**
