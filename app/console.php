@@ -28,6 +28,7 @@ use Kacademy\Commands\BadgeScrapperCommand;
 use Kacademy\Commands\BadgeCategoryScrapperCommand;
 use Kacademy\Commands\UserScrapperCommand;
 use Kacademy\Commands\ArticleScrapperCommand;
+use Kacademy\Commands\ArticleUpdaterCommand;
 
 $app = new Application();
 $app->add(new TranscriptScrapperCommand());
@@ -44,4 +45,5 @@ $app->add(new BadgeScrapperCommand());
 $app->add(new BadgeCategoryScrapperCommand());
 $app->add(new UserScrapperCommand());
 $app->add(new ArticleScrapperCommand());
+$app->add(new ArticleUpdaterCommand());
 $app->run();
