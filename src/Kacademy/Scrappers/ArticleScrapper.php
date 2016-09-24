@@ -110,6 +110,7 @@ class ArticleScrapper extends BaseScrapper {
                             }
                             $articles[] = array(
                                 'type'          => 'Article',
+                                'ka_url'        => $this->cleanHtml($this->arrayKeySetAndNull($contentItem, 'nodeUrl')),
                                 'description'   => $this->cleanHtml($this->arrayKeySetAndNull($contentItem, 'description')),
                                 'thumbnail_url' => $this->arrayKeySetAndNull($contentItem, 'thumbnailUrl'),
                                 'title'         => $this->cleanHtml($this->arrayKeySetAndNull($contentItem, 'title')),

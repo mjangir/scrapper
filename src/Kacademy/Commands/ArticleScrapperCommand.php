@@ -72,7 +72,7 @@ EOT
         $subTopics = SubTopicModel::where('is_active', 1)
                 ->where('node_slug', '<>', NULL)
                 ->where('node_slug', '<>', '')
-                ->where('title', '=', 0)
+                ->where('article_scrapped', '=', 0)
                 ->get();
         
         // If sub-topics are not empty
