@@ -114,8 +114,6 @@ class ArticleUpdaterScrapper extends BaseScrapper {
                 }
             }
         }
-        echo '<pre>';
-        print_r($record);
 	return $record;
     }
     

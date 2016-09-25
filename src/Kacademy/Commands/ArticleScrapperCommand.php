@@ -72,7 +72,7 @@ EOT
         $subTopics = SubTopicModel::where('is_active', 1)
                 ->where('node_slug', '<>', NULL)
                 ->where('node_slug', '<>', '')
-                ->where('article_scrapped', '=', 0)
+                ->where('article_scanned', '=', 0)
                 ->get();
         
         // If sub-topics are not empty
@@ -106,6 +106,7 @@ EOT
                         
                         // Update total scrapped element to their parent table
                         $subTopic->article_scrapped = $totalRecords;
+                        $subTopic->article_scanned = 1;
                         $subTopic->save();
                     }
                 });
