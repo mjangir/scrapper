@@ -98,6 +98,7 @@ class UserScrapper extends BaseScrapper {
                 'background_image_src'      => (isset($result['background']['imageSrc'])) ? $result['background']['imageSrc'] : NULL,
                 'is_phantom'                => $this->arrayKeySetAndNull($result, 'isPhantom'),
                 'nickname'                  => $this->arrayKeySetAndNull($result, 'nickname'),
+                'energy_points'             => $this->arrayKeySetAndNull($result, 'points'),
             );
             
             if(isset($result['publicBadges']) && !empty($result['publicBadges'])) {
