@@ -4,6 +4,7 @@ namespace Kacademy\Commands;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -23,7 +24,8 @@ class SubTopicScrapperCommand extends Command {
         $this->setName("scrap:sub-topics")
                 ->setDescription("This command scraps all the sub-topic names")
                 ->setDefinition(array(
-                    new InputOption('refresh', 'r')
+                    new InputOption('refresh', 'r'),
+                    new InputArgument('slugs', InputArgument::IS_ARRAY, 'Space separated slugs', null)
                 ))
                 ->setHelp(<<<EOT
 Scraps all topic name
@@ -68,15 +70,27 @@ EOT
             SubTopicModel::getQuery()->delete();
         }
         
+        $slugs = $input->getArgument('slugs');
+        
         // Get all topics for which the sub-topics have to be scrapped
-        $topics = TopicModel::where('is_active', 1)
-                ->where('node_slug', '<>', NULL)
-                ->where('node_slug', '<>', '')
-                ->where('sub_topic_scrapped', '=', 0)
-                ->get();
+        if(!empty($slugs))
+        {
+            $topics = TopicModel::where('is_active', 1)
+                        ->where('node_slug', '<>', NULL)
+                        ->where('sub_topic_scrapped', '=', 0)
+                        ->whereIn('node_slug', $slugs)
+                        ->get();
+        }
+        else
+        {
+            $topics = TopicModel::where('is_active', 1)
+                        ->where('node_slug', '<>', NULL)
+                        ->where('sub_topic_scrapped', '=', 0)
+                        ->get();
+        }
         
         // If topics are not empty
-        if(!empty($topics)) {
+        if($topics->count() > 0) {
             
             foreach ($topics as $topic) {
                 
@@ -120,6 +134,9 @@ EOT
             }
             // Show the completion message on console
             $output->writeln("<info>Sub Topics Scrapping Completed</info>");
+        }
+        else {
+            $output->writeln("<info>No Topic Found To Scrap Sub-Topics</info>");
         }
         
     }

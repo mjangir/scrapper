@@ -4,6 +4,7 @@ namespace Kacademy\Commands;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -23,7 +24,8 @@ class VideoScrapperCommand extends Command {
         $this->setName("scrap:videos")
                 ->setDescription("This command scraps all the sub-topic videos")
                 ->setDefinition(array(
-                    new InputOption('refresh', 'r')
+                    new InputOption('refresh', 'r'),
+                    new InputArgument('slugs', InputArgument::IS_ARRAY, 'Space separated slugs', null)
                 ))
                 ->setHelp(<<<EOT
 Scraps all topic name
@@ -69,14 +71,26 @@ EOT
         }
         
         // Get all sub-topics for which the videos have to be scrapped
-        $subTopics = SubTopicModel::where('is_active', 1)
-                ->where('node_slug', '<>', NULL)
-                ->where('node_slug', '<>', '')
-                ->where('video_scrapped', '=', 0)
-                ->get();
+        $slugs = $input->getArgument('slugs');
+        
+        if(!empty($slugs))
+        {
+            $subTopics = SubTopicModel::where('is_active', 1)
+                        ->where('node_slug', '<>', NULL)
+                        ->where('video_scrapped', '=', 0)
+                        ->whereIn('node_slug', $slugs)
+                        ->get();
+        }
+        else
+        {
+            $subTopics = SubTopicModel::where('is_active', 1)
+                    ->where('node_slug', '<>', NULL)
+                    ->where('video_scrapped', '=', 0)
+                    ->get();
+        }
         
         // If sub-topics are not empty
-        if(!empty($subTopics)) {
+        if($subTopics->count() > 0) {
             
             
             // Create scrapper instance
@@ -112,6 +126,10 @@ EOT
             }
             // Show the completion message on console
             $output->writeln("<info>Video Scrapping Completed</info>");
+        }
+        else
+        {
+            $output->writeln("<info>No Sub Topic Found To Scrap Videos</info>");
         }
     }
 }
