@@ -72,9 +72,9 @@ EOT
         // Get all user ids from post and comments
         $userIds = Capsule::select("SELECT DISTINCT author_ka_id
                     FROM (
-                        SELECT author_ka_id FROM posts WHERE user_scrapped = 0
+                        SELECT author_ka_id FROM posts WHERE user_scrapped = 0 limit 500
                         UNION
-                        SELECT author_ka_id FROM comments WHERE user_scrapped = 0
+                        SELECT author_ka_id FROM comments WHERE user_scrapped = 0 limit 500
                     ) a");
         
         if(!empty($userIds)) {
