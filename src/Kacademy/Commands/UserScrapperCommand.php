@@ -87,7 +87,7 @@ EOT
                 // Create scrapper instance
                 
                 $scrapper->setUrl('https://www.khanacademy.org/api/internal/user/profile?kaid='.$authorKaId.'&lang=en');
-                $scrapper->runScrapper(function($record) use ($scrapper, $output, $authorKaId) {
+                $scrapper->runScrapper(function($record) use ($scrapper, $output, $authorKaId, $userId) {
 
                     if(!empty($record)) {
                         
@@ -99,8 +99,27 @@ EOT
                         $record['author_ka_id'] = $authorKaId;
                         $user = UserModel::create($record);
                         
-                        $userId->user_scrapped = 1;
-                        $userId->save();
+                        // Update posts user scrapped 
+                        $posts = \Kacademy\Models\Post::where('author_ka_id', '=', $authorKaId)->get();
+                        if(!empty($posts))
+                        {
+                            foreach($posts as $post)
+                            {
+                                $post->user_scrapped = 1;
+                                $post->save();
+                            }
+                        }
+                        
+                        // Update comments user scrapped 
+                        $comments = \Kacademy\Models\Comment::where('author_ka_id', '=', $authorKaId)->get();
+                        if(!empty($comments))
+                        {
+                            foreach($comments as $comment)
+                            {
+                                $comment->user_scrapped = 1;
+                                $comment->save();
+                            }
+                        }
                         
                         if(!empty($badges)) {
                             foreach ($badges as $badge) {
